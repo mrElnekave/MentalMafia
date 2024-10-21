@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "express": "^4.21.1",
+    "http": "^0.0.1-security",
+    "jiff-mpc": "^1.0.0"
+  }
+}
