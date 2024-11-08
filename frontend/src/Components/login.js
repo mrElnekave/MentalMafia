@@ -1,51 +1,41 @@
-// src/Login.js
+// src/components/Login.js
+
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // Navigation hook from React Router
-// Correct import
-import { io } from 'socket.io-client';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
+import '../App.css';
 
+function Login() {
+  const [name, setName] = useState('');
+  const navigate = useNavigate();
 
-const socket = io('http://localhost:3000'); // Connect to the backend server
-
-const Login = () => {
-  const [username, setUsername] = useState('');
-  const [error, setError] = useState('');
-  const navigate = useNavigate(); // Use for navigation
-
-  const handleLogin = () => {
-    if (!username) {
-      setError('Username is required');
-      return;
+  const handleLogin = async () => {
+    try {
+      const response = await axios.post('http://localhost:3001/api/user/login', { name });
+      
+      const { userId } = response.data;
+      // Store userId in localStorage or state management
+      localStorage.setItem('userId', userId);
+      navigate('/game');
+    } catch (error) {
+      console.error('Login error:', error.response.data.error);
     }
-
-    // Emit the joinGame event to the backend
-    socket.emit('joinGame', username);
-
-    // Navigate to the game page
-    navigate('/game');
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-2xl font-bold mb-6 text-center">Login to Mafia Game</h1>
-        <input
-          type="text"
-          placeholder="Enter your username"
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full px-4 py-2 mb-4 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          onClick={handleLogin}
-          className="w-full bg-blue-500 text-white py-2 rounded-md hover:bg-blue-600 transition"
-        >
-          Join Game
-        </button>
-        {error && <p className="text-red-500 mt-4">{error}</p>}
-      </div>
+    <div className="login-container">
+      <h2>Mafia Game Login</h2>
+      <input
+        type="text"
+        placeholder="Enter your name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <button onClick={handleLogin} disabled={!name}>
+        Login
+      </button>
     </div>
   );
-};
+}
 
 export default Login;
