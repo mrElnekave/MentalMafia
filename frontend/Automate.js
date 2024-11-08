@@ -17,13 +17,16 @@ async function simulatePlayers() {
   console.log('\nPlayers joining the game...');
   for (const player of players) {
     const response = await axios.post(`${BASE_URL}/user/game/join`, { userId: player.userId });
+    console.log(response.data, "joined game witht given data of what");
     player.role = response.data.role;
-    player.status = response.data.status;
-    console.log(`Player ${player.name} joined game with role: ${player.role}`);
+    player.status = 'alive';
+    console.log(`Player ${player} joined game with role: ${player.role}`);
   }
 
   // Identify roles
   const mafia = players.find(p => p.role === 'god');
+
+  // console.log(mafia, "is who")
   const angel = players.find(p => p.role === 'angel');
   let round = 1;
 
@@ -35,7 +38,11 @@ async function simulatePlayers() {
     await new Promise(resolve => setTimeout(resolve, 2000));
 
     // Mafia kills a player
+
+    console.log(players, "players for me are");
     const alivePlayers = players.filter(p => p.status === 'alive' && p.role !== 'god');
+
+    console.log(alivePlayers, "are wh")
     if (mafia && alivePlayers.length > 0) {
       const target = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
       const response = await axios.post(`${BASE_URL}/game/action/kill`, { userId: mafia.userId, targetId: target.userId });
@@ -59,11 +66,17 @@ async function simulatePlayers() {
     for (const player of votingPlayers) {
       let randomTarget;
 
-      // 20% chance to vote for the Mafia, 80% chance to vote for a random player
-      if (Math.random() < 0.2 && mafia && mafia.status === 'alive') {
-        randomTarget = mafia; // Vote for the Mafia
+      // Alternate between targeting the Mafia and random voting
+      if (round % 2 === 0 && mafia && mafia.status === 'alive') {
+        // Every other round, there's a 10% chance of targeting the Mafia, 90% for a random player
+        if (Math.random() < 0.1) {
+          randomTarget = mafia;
+        } else {
+          const possibleTargets = players.filter(target => target.status === 'alive' && target.userId !== player.userId);
+          randomTarget = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+        }
       } else {
-        // Vote for a random alive player (excluding self and Mafia if not chosen)
+        // Odd rounds, 100% chance of random voting
         const possibleTargets = players.filter(target => target.status === 'alive' && target.userId !== player.userId);
         randomTarget = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
       }
