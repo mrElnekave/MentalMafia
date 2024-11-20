@@ -41,7 +41,20 @@ async def run_mpc_protocol(mpc_program, player_id):
     # print(f"Error from MP-SPDZ (Player {player_id}): {stderr.decode()}")
     return output
 
+def populate_input_from_state():
+    """
+    Populate the input files for each player from the state file.
+    """
+    pass
+
+def write_output_to_state(result):
+    """
+    Write the output to the state file.
+    """
+    pass
+
 async def main():
+    # ---------------------------------------------------------
     # get program name from command line
     mpc_program = input("Enter the name of the MPC program: ")    
 
@@ -49,6 +62,8 @@ async def main():
     inputs = [input(f"input for {i}: ") for i in range(NUM_PLAYERS)]
     for player_id, input_value in enumerate(inputs):
         write_player_input(input_value, player_id)
+    # ---------------------------------------------------------
+    # Replace the above with populate_input_from_state()
 
     # Run the MPC protocol for N players concurrently
     tasks = [run_mpc_protocol(mpc_program, player_id) for player_id in range(NUM_PLAYERS)]
@@ -56,7 +71,9 @@ async def main():
 
     # Print the results
     for player_id, result in enumerate(results):
-        print(f"Result for Player {player_id}: {result}")
+        if player_id == 0:
+            print(f"Output is: \n{result}")
+            write_output_to_state(result)
 
 if __name__ == '__main__':
     asyncio.run(main())
