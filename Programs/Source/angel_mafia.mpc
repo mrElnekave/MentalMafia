@@ -22,12 +22,12 @@ mafia_kill = sum(client_inputs_mafia)
 # Check if they are the same
 saved = angel_save == mafia_kill
 
-if_then(saved.reveal() == 1)
-print_ln("Angel saved the victim")
-end_if()
-if_then(saved.reveal() == 0)
-print_ln("Mafia killed %s", mafia_kill.reveal())
-end_if()
+@if_e(saved.reveal() == 1)
+def _():
+    print_ln("Angel saved the victim")
+@else_
+def _():
+    print_ln("Mafia killed %s", mafia_kill.reveal())
 
 
 # ./mascot-party.x -N 3 -p 0 angel_mafia > party0.log &
