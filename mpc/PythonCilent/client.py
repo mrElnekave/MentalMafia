@@ -7,6 +7,7 @@ Inputs are separated by spaces if the protocol expects multiple inputs
 """
 import asyncio
 import sys
+import os
 
 MPC_DIRECTORY = '.'
 NUM_PLAYERS = int(sys.argv[1])  # Expect number of players as argument 
@@ -16,6 +17,8 @@ def write_player_input(input_value, player_id):
     Write this player's input to its designated input file.
     """
     input_file = f'{MPC_DIRECTORY}/Player-Data/Input-P{player_id}-0'
+    os.makedirs(os.path.dirname(input_file), exist_ok=True)
+
     with open(input_file, 'w') as f:
         for val in input_value.split(" "):
             f.write(str(val))
