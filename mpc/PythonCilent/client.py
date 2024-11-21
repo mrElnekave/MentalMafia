@@ -1,5 +1,6 @@
+#!/usr/bin/env python3
 """
-Usage: python3 client.py <number of players>
+Usage: client.py <number of players>
 number of players must be the same as compiled MP-SPDZ program
 MUST BE RUN FROM MP-SPDZ DIRECTORY
 

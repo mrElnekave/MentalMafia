@@ -26,7 +26,7 @@ COPY libSPDZ.so /mp-spdz/
 
 # Copy the required schedule and bytecode files
 COPY Programs/Schedules/*.sch /mp-spdz/Programs/Schedules/
-COPY Programs/Bytecode/*-0.bc /mp-spdz/Programs/Bytecode/
+COPY Programs/Bytecode/*.bc /mp-spdz/Programs/Bytecode/
 
 RUN mkdir PythonClient Player-Data
 
