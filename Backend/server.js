@@ -1,28 +1,50 @@
 // server.js
 
-const express = require("express");
-const http = require("http");
-const { Server } = require("socket.io");
-const cors = require("cors");
-
-// Import routes and socket logic
-const gameRoutes = require("./Routes/Game");
-const mafiaSocket = require("./Sockets/mainSocket");
-
+const express = require('express');
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const http = require('http');
+const socketIo = require('socket.io');
+const gameRoutes = require('./Routes/Game.js');
+const userRoutes = require('./Routes/UserRoutes');
+const cors = require('cors');
 
-// Middleware
-app.use(cors());
+const server = http.createServer(app);
+const io = socketIo(server);
+
+const PORT = process.env.PORT || 3001;
+
 app.use(express.json());
 
-// Use routes
-app.use("/api", gameRoutes);
 
-// Initialize socket logic
-mafiaSocket(io);
+app.use(cors({
+    origin: 'http://localhost:3000',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  }));
+// Use Routes
+app.use('/api/game', gameRoutes);
+app.use('/api/user', userRoutes);
 
 // Start the server
-const PORT = 3000;
-server.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+app.get('/', (req, res) => {
+    res.send('Server is working!');
+  });
+  
+
+// Socket.io setup
+io.on('connection', (socket) => {
+  console.log('New client connected');
+
+  // Handle socket events here
+
+  socket.on('disconnect', () => {
+    console.log('Client disconnected');
+  });
+});
+
+module.exports = { app, io };

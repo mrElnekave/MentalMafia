@@ -1,22 +1,19 @@
 // src/App.js
+
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom'; // Router setup
-import Login from './Components/login.js';
-// import Game from './Components/Game';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import Login from './Components/login';
+import GamePage from './Components/GamePage';
 
-
-const App = () => {
+function App() {
   return (
     <Router>
-      <div className="h-screen bg-gray-100">
-       
-        <Routes>
-          <Route path="/" element={<Login />} /> {/* Login page */}
-        
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/game" element={<GamePage />} />
+      </Routes>
     </Router>
   );
-};
+}
 
 export default App;

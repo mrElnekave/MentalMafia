@@ -1,10 +1,15 @@
 # MentalMafia
 
+Backend works about 70% for game logic.
 
-docker build -t mental-mafia .
+To test users I have a script on frontend called automation. It runs a simulation.
 
-docker run --rm -p 8080:8080 mental-mafia
+Node automation.js --While in frontend folder
 
-And follow the instructions in the terminal.
+Backend must be started. npm start in the backend folder.
 
-This is currently a 3 player protocol so open up 3 tabs, and enter the role "mafia" for one of them.
+Frontend UI,just basic Logic page rn, 
+
+## MPC
+
+All mpc protocols implemented and runnable, still working on the interface with the JS client.
