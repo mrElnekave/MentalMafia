@@ -2,58 +2,83 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import '../App.css';
 
-function Vote({ userId, role, players, sessionId, setMessage }) {
-  const [targetId, setTargetId] = useState('');
+function Vote({ userId, userRole, players, setMessage, onVoteComplete }) {
+  const [selectedPlayerId, setSelectedPlayerId] = useState('');
 
   const handleVote = async () => {
     try {
       const response = await axios.post('http://localhost:3001/api/game/vote', {
         userId,
-        voteeId: targetId,
+        voteeId: selectedPlayerId,
       });
       setMessage(response.data.message);
+
+      if (onVoteComplete) {
+        onVoteComplete();
+      }
     } catch (error) {
-      console.error('Vote error:', error.response?.data?.error || error.message);
+      setMessage(`Vote error: ${error.response?.data?.error || error.message}`);
     }
   };
 
-  const handleAction = async () => {
+  const handleSpecialAction = async (action) => {
     let url = '';
-    if (role === 'god') {
-      url = 'http://localhost:3001/api/game/action/kill';
-    } else if (role === 'angel') {
-      url = 'http://localhost:3001/api/game/action/revive';
-    } else {
-      return;
-    }
+    if (action === 'kill') url = 'http://localhost:3001/api/game/action/kill';
+    if (action === 'save') url = 'http://localhost:3001/api/game/action/save';
 
     try {
-      const response = await axios.post(url, { userId, targetId });
+      const response = await axios.post(url, {
+        userId,
+        targetId: selectedPlayerId,
+      });
       setMessage(response.data.message);
+
+      if (onVoteComplete) {
+        onVoteComplete();
+      }
     } catch (error) {
-      console.error('Action error:', error.response?.data?.error || error.message);
+      setMessage(`Action error: ${error.response?.data?.error || error.message}`);
     }
   };
 
   return (
     <div className="vote-container">
       <h3>Choose a player:</h3>
-      <select onChange={(e) => setTargetId(e.target.value)} value={targetId}>
+      <select
+        onChange={(e) => setSelectedPlayerId(e.target.value)}
+        value={selectedPlayerId}
+      >
         <option value="">Select a player</option>
         {players
           .filter((p) => p.userId !== userId && p.status === 'alive')
           .map((player) => (
             <option key={player.userId} value={player.userId}>
-              {player.name}
+              {player.name} - {player.status}
             </option>
           ))}
       </select>
-      <button onClick={handleVote} disabled={!targetId}>
-        Vote
-      </button>
-      {(role === 'god' || role === 'angel') && (
-        <button onClick={handleAction} disabled={!targetId}>
-          {role === 'god' ? 'Kill' : 'Revive'}
+
+      {userRole === 'player' && (
+        <button onClick={handleVote} disabled={!selectedPlayerId}>
+          Vote
+        </button>
+      )}
+
+      {userRole === 'Mafia' && (
+        <button
+          onClick={() => handleSpecialAction('kill')}
+          disabled={!selectedPlayerId}
+        >
+          Mafia Kill
+        </button>
+      )}
+
+      {userRole === 'angel' && (
+        <button
+          onClick={() => handleSpecialAction('save')}
+          disabled={!selectedPlayerId}
+        >
+          Angel Save
         </button>
       )}
     </div>

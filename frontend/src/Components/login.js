@@ -9,6 +9,9 @@ function Login() {
   const [name, setName] = useState('');
   const navigate = useNavigate();
 
+  const playerId = new URLSearchParams(window.location.search).get('player') || 'default';
+  localStorage.setItem('playerId', playerId)
+
   const handleLogin = async () => {
     try {
       const response = await axios.post('http://localhost:3001/api/user/login', { name });
@@ -16,6 +19,7 @@ function Login() {
       const { userId } = response.data;
       // Store userId in localStorage or state management
       localStorage.setItem('userId', userId);
+      
       navigate('/game');
     } catch (error) {
       console.error('Login error:', error.response.data.error);

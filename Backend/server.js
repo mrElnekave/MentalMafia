@@ -15,13 +15,27 @@ const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
 
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3006',
+  'http://localhost:3003',
+  'http://localhost:3004',
+  'http://localhost:3005',
+];
 
 app.use(cors({
-    origin: 'http://localhost:3000',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
-  }));
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true); // Allow the origin
+    } else {
+      callback(new Error('Not allowed by CORS')); // Deny the origin
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
+
 // Use Routes
 app.use('/api/game', gameRoutes);
 app.use('/api/user', userRoutes);
