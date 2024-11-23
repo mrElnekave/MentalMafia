@@ -120,6 +120,7 @@ body {
 
 
 
+
 .vote-container h3 {
   color: #7289da;
   font-size: 1.5rem;
@@ -131,5 +132,23 @@ body {
   width: 80%;
   max-width: 300px;
   margin: 8px 0;
+}
+
+.player-list {
+  margin-top: 20px;
+}
+
+.player-list .dead {
+  color: red;
+  text-decoration: line-through;
+}
+
+.player-list .alive {
+  color: green;
+}
+
+.message {
+  margin-top: 10px;
+  color: blue;
 }
 

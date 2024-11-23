@@ -4,103 +4,105 @@ const BASE_URL = 'http://localhost:3001/api';
 async function simulatePlayers() {
   const players = [];
 
-  // Step 1: Log in fake players
   console.log('Logging in players...');
   for (let i = 0; i < 5; i++) {
-    const response = await axios.post(`${BASE_URL}/user/login`, { name: `Player${i + 1}` });
-    const userId = response.data.userId;
-    players.push({ userId, name: `Player${i + 1}`, status: 'alive' });
-    console.log(`Player${i + 1} logged in with userId: ${userId}`);
+    try {
+      const response = await axios.post(`${BASE_URL}/user/login`, { name: `Player${i + 1}` });
+      players.push({ userId: response.data.userId, name: `Player${i + 1}`, status: 'alive' });
+      console.log(`Player${i + 1} logged in with userId: ${response.data.userId}`);
+    } catch (error) {
+      console.error(`Error logging in Player${i + 1}:`, error.message);
+    }
   }
 
-  // Step 2: Have each player join the game and wait for role assignment
   console.log('\nPlayers joining the game...');
   for (const player of players) {
-    const response = await axios.post(`${BASE_URL}/user/game/join`, { userId: player.userId });
-    console.log(response.data, "joined game witht given data of what");
-    player.role = response.data.role;
-    player.status = 'alive';
-    console.log(`Player ${player} joined game with role: ${player.role}`);
+    try {
+      const response = await axios.post(`${BASE_URL}/user/game/join`, { userId: player.userId });
+      player.role = response.data.role;
+      console.log(`${player.name} joined with role: ${player.role}`);
+    } catch (error) {
+      console.error(`Error joining game for ${player.name}:`, error.message);
+    }
   }
 
-  // Identify roles
-  const mafia = players.find(p => p.role === 'god');
-
-  // console.log(mafia, "is who")
-  const angel = players.find(p => p.role === 'angel');
   let round = 1;
+  let gameOver = false;
 
-  // Step 3: Loop until Mafia is eliminated
-  while (true) {
+  while (!gameOver) {
     console.log(`\n--- Round ${round} ---`);
 
-    // Wait before the round starts
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Mafia kills a player
-
-    console.log(players, "players for me are");
-    const alivePlayers = players.filter(p => p.status === 'alive' && p.role !== 'god');
-
-    console.log(alivePlayers, "are wh")
-    if (mafia && alivePlayers.length > 0) {
-      const target = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-      const response = await axios.post(`${BASE_URL}/game/action/kill`, { userId: mafia.userId, targetId: target.userId });
-      target.status = 'dead';
-      console.log(`Mafia (${mafia.name}) killed ${target.name}: ${response.data.message}`);
-    }
-
-    // Angel revives any dead player
-    const deadPlayers = players.filter(p => p.status === 'dead');
-    if (angel && deadPlayers.length > 0) {
-      const reviveTarget = deadPlayers[Math.floor(Math.random() * deadPlayers.length)];
-      const response = await axios.post(`${BASE_URL}/game/action/revive`, { userId: angel.userId, targetId: reviveTarget.userId });
-      reviveTarget.status = 'alive';
-      console.log(`Angel (${angel.name}) revived ${reviveTarget.name}: ${response.data.message}`);
-    }
-
-    // Players (including the Angel) vote to eliminate the suspected Mafia
-    console.log('\nPlayers are voting...');
-    const votingPlayers = players.filter(p => p.status === 'alive' && p.role !== 'god'); // Includes Angel and normal players
-
-    for (const player of votingPlayers) {
-      let randomTarget;
-
-      // Alternate between targeting the Mafia and random voting
-      if (round % 2 === 0 && mafia && mafia.status === 'alive') {
-        // Every other round, there's a 10% chance of targeting the Mafia, 90% for a random player
-        if (Math.random() < 0.1) {
-          randomTarget = mafia;
-        } else {
-          const possibleTargets = players.filter(target => target.status === 'alive' && target.userId !== player.userId);
-          randomTarget = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+    const mafia = players.find(p => p.role === 'god' && p.status === 'alive');
+    if (mafia) {
+      const target = players.find(p => p.status === 'alive' && p.role !== 'god');
+      if (target) {
+        try {
+          await axios.post(`${BASE_URL}/game/action/kill`, { userId: mafia.userId, targetId: target.userId });
+          console.log(`Mafia (${mafia.name}) selected ${target.name} as a target.`);
+        } catch (error) {
+          console.error('Mafia action error:', error.message);
         }
+      }
+    }
+
+    const angel = players.find(p => p.role === 'angel' && p.status === 'alive');
+    if (angel) {
+      const deadPlayer = players.find(p => p.status === 'dead');
+      if (deadPlayer) {
+        try {
+          await axios.post(`${BASE_URL}/game/action/revive`, { userId: angel.userId, targetId: deadPlayer.userId });
+          deadPlayer.status = 'alive';
+          console.log(`Angel (${angel.name}) revived ${deadPlayer.name}`);
+        } catch (error) {
+          console.error('Angel action error:', error.message);
+        }
+      }
+    }
+
+    console.log('\nPlayers are voting...');
+    for (const player of players.filter(p => p.status === 'alive')) {
+      let voteTarget;
+      
+      // Set a 50% chance to vote for the Mafia, if the Mafia is alive
+      if (mafia && Math.random() < 0.1) {
+        voteTarget = mafia;
       } else {
-        // Odd rounds, 100% chance of random voting
-        const possibleTargets = players.filter(target => target.status === 'alive' && target.userId !== player.userId);
-        randomTarget = possibleTargets[Math.floor(Math.random() * possibleTargets.length)];
+        // Choose a random alive player who isn't the voter
+        const aliveTargets = players.filter(p => p.status === 'alive' && p.userId !== player.userId);
+        voteTarget = aliveTargets[Math.floor(Math.random() * aliveTargets.length)];
       }
 
-      try {
-        const response = await axios.post(`${BASE_URL}/game/vote`, { userId: player.userId, voteeId: randomTarget.userId });
-        console.log(`${player.name} voted to eliminate ${randomTarget.name}: ${response.data.message}`);
-      } catch (error) {
-        console.error(`${player.name} could not vote due to error: ${error.response?.data?.error || error.message}`);
+      if (voteTarget) {
+        try {
+          await axios.post(`${BASE_URL}/game/vote`, { userId: player.userId, voteeId: voteTarget.userId });
+          console.log(`${player.name} voted to eliminate ${voteTarget.name}`);
+        } catch (error) {
+          console.error(`Vote error by ${player.name}:`, error.message);
+        }
       }
     }
 
-    // Check if Mafia is still alive
-    const isMafiaAlive = players.some(p => p.role === 'god' && p.status === 'alive');
-    if (!isMafiaAlive) {
-      console.log('\n--- Mafia has been eliminated! Players win! ---');
-      break;
-    } else {
-      console.log('\nMafia is still alive. Moving to the next round...');
-      round++;
+    // Check the game status after each round
+    try {
+      const gameStatusResponse = await axios.get(`${BASE_URL}/game/status`);
+      const gameStatus = gameStatusResponse.data.status;
+      console.log(`Game status after Round ${round}: ${gameStatus}`);
+      
+      if (gameStatus === 'ended') {
+        console.log(`\n--- Game over: ${gameStatusResponse.data.result} ---`);
+        gameOver = true;
+        break;
+      }
+    } catch (error) {
+      console.error('Error checking game status:', error.message);
     }
 
-    // Wait a bit before starting the next round
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // Reset voting and increment the round counter
+    players.forEach(p => (p.voted = false));
+    round++;
+
+    // Add a delay to simulate rounds more clearly
+    await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
   console.log('\nSimulation complete!');

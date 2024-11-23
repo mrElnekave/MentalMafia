@@ -18,28 +18,30 @@ router.post('/login', (req, res) => {
 });
 
 // Join the game
+let rolesAssigned = false; // A flag to check if roles have been assigned
+
+// Join Game Route (Simplified Example)
 router.post('/game/join', (req, res) => {
     const { userId } = req.body;
-
-  if (!users[userId] || !users[userId].isLoggedIn) {
-    return res.status(400).json({ error: 'Invalid or inactive user' });
-  }
-
-  // Assign roles if we have exactly 5 players and roles are not assigned yet
-  if (Object.keys(users).length === 5 && !Object.values(users).some(u => u.role)) {
-    console.log('Assigning roles...');
-    assignRoles();
-  }
-
-  // Confirm roles are assigned and log the response
-  const userRole = users[userId].role;
-  const status = userRole ? 'in-progress' : 'waiting';
-  console.log(`Player ${userId} joining with role: ${userRole || 'waiting'}`);
-
-  res.json({
-    role: userRole || 'waiting',
-    status,
+  
+    if (!userId || !users[userId]) {
+      return res.status(400).json({ error: 'Invalid or missing userId' });
+    }
+  
+    // Role assignment logic (run only once)
+    if (!users[userId].role) {
+      // Ensure roles are assigned only once per session
+      const roles = ['Mafia', 'angel', 'player', 'player', 'player'];
+      roles.sort(() => Math.random() - 0.5); // Shuffle roles randomly
+  
+      Object.values(users).forEach((user, index) => {
+        user.role = roles[index] || 'player';
+      });
+    }
+  
+    const userRole = users[userId].role;
+    return res.json({ sessionId: '1', role: userRole, status: 'in-progress' });
   });
-});
+  
 
 module.exports = router;

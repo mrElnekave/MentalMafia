@@ -1,70 +1,113 @@
-// gameLogic.js
 const { users } = require('./data');
 
-// Assign roles to 5 players in a single game
 function assignRoles() {
-    const playerIds = Object.keys(users);
-    if (playerIds.length < 5) return; // Ensure there are 5 players
-  
-    console.log('Shuffling players and assigning roles...');
-    const shuffledPlayerIds = playerIds.sort(() => 0.5 - Math.random());
-  
-    // Assign roles
-    users[shuffledPlayerIds[0]].role = 'god';
-    console.log(`Assigned god role to ${shuffledPlayerIds[0]}`);
-  
-    users[shuffledPlayerIds[1]].role = 'angel';
-    console.log(`Assigned angel role to ${shuffledPlayerIds[1]}`);
-  
-    for (let i = 2; i < shuffledPlayerIds.length; i++) {
-      users[shuffledPlayerIds[i]].role = 'player';
-      console.log(`Assigned player role to ${shuffledPlayerIds[i]}`);
-    }
-  
-    console.log('Roles assigned:', playerIds.map(id => ({ id, role: users[id].role })));
+  const playerIds = Object.keys(users);
+  playerIds.sort(() => Math.random() - 0.5); // Shuffle player IDs randomly
+
+  users[playerIds[0]].role = 'Mafia'; // Assign the first player as Mafia
+  users[playerIds[1]].role = 'angel'; // Assign the second player as Angel
+  for (let i = 2; i < playerIds.length; i++) {
+    users[playerIds[i]].role = 'player'; // Assign the rest as regular players
   }
-  
-// Process votes and determine the result
+  console.log("Roles assigned:", users);
+}
+
 function processVotes() {
-    const voteCounts = {};
-    Object.values(users).forEach(user => {
-      if (user.votes) {
-        voteCounts[user.userId] = (voteCounts[user.userId] || 0) + user.votes;
-        delete user.votes; // Reset vote count for the next round
-      }
-      user.voted = false; // Reset voting status for the next round
-    });
-  
-    // Determine the player with the most votes
-    const [eliminatedUserId] = Object.entries(voteCounts).reduce(
-      (acc, [userId, count]) => (count > acc[1] ? [userId, count] : acc),
-      [null, 0]
-    );
-  
-    if (eliminatedUserId) {
-      users[eliminatedUserId].status = 'dead';
-      console.log(`Player ${eliminatedUserId} has been eliminated`);
-      checkWinCondition();
+  const voteCounts = {};
+  Object.values(users).forEach((user) => {
+    if (user.votes) {
+      voteCounts[user.userId] = user.votes;
     }
+    // Reset voting flags
+    user.voted = false;
+    user.votes = 0;
+  });
+
+  const maxVotes = Math.max(...Object.values(voteCounts));
+  if (Object.keys(voteCounts).length === 0 || maxVotes === 0) {
+    console.log("No votes were cast this round. Advancing to the next round.");
+    return 'next_round';
   }
 
-// Check if there's a win condition
-function checkWinCondition() {
-    const alivePlayers = Object.values(users).filter(user => user.status === 'alive');
-    const mafiaAlive = alivePlayers.some(user => user.role === 'god');
-    const playersAlive = alivePlayers.some(user => user.role === 'player');
-  
-    if (!mafiaAlive) {
-      console.log('Players win!');
-      process.exit(); // Ends the game simulation
-    } else if (!playersAlive) {
-      console.log('Mafia wins!');
-      process.exit(); // Ends the game simulation
-    }
+  const tiedPlayers = Object.keys(voteCounts).filter((id) => voteCounts[id] === maxVotes);
+  if (tiedPlayers.length > 1) {
+    console.log("There's a tie in votes. No one is eliminated.");
+    return 'next_round';
   }
+
+  const votedOutId = tiedPlayers[0];
+  users[votedOutId].status = 'dead';
+  console.log(`${users[votedOutId].name} was voted out.`);
+  return 'next_round';
+}
+
+function mafiaSelectTarget(targetId) {
+  const target = users[targetId];
+  if (target && target.status === 'alive') {
+    target.targetedByMafia = true;
+    console.log(`Mafia selected ${target.name} as their target.`);
+  } else {
+    console.log("Invalid Mafia target. Action ignored.");
+  }
+}
+
+function angelSave(targetId) {
+  const target = users[targetId];
+  if (target && target.status === 'alive') {
+    target.savedByAngel = true;
+    console.log(`Angel chose to save ${target.name}.`);
+  } else {
+    console.log("Invalid Angel save target. Action ignored.");
+  }
+}
+
+function finalizeRound() {
+  Object.values(users).forEach((user) => {
+    if (user.targetedByMafia) {
+      if (user.savedByAngel) {
+        console.log(`Angel saved ${user.name} from Mafia's kill.`);
+      } else {
+        user.status = 'dead';
+        console.log(`Mafia killed ${user.name}.`);
+      }
+      // Reset round-specific flags
+      user.targetedByMafia = false;
+      user.savedByAngel = false;
+    }
+  });
+
+  return checkWinCondition();
+}
+
+function checkWinCondition() {
+  const alivePlayers = Object.values(users).filter((u) => u.status === 'alive');
+  const mafiaAlive = alivePlayers.some((u) => u.role === 'Mafia');
+  const nonMafiaAlive = alivePlayers.some((u) => u.role !== 'Mafia');
+
+  if (!mafiaAlive) {
+    console.log("Players win! The Mafia has been eliminated.");
+    return 'players_win';
+  }
+  if (mafiaAlive && !nonMafiaAlive) {
+    console.log("Mafia wins! All non-Mafia players are dead.");
+    return 'mafia_win';
+  }
+
+  return 'in-progress';
+}
+
+function resetVotingStatus() {
+  Object.values(users).forEach((user) => {
+    user.voted = false;
+  });
+}
 
 module.exports = {
   assignRoles,
   processVotes,
+  mafiaSelectTarget,
+  angelSave,
+  finalizeRound,
   checkWinCondition,
+  resetVotingStatus,
 };
