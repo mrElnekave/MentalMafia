@@ -1,49 +1,44 @@
-# Use Ubuntu as the base image
-FROM ubuntu:latest
+FROM python:3.10.3-bullseye
 
+# Install dependencies
 RUN apt-get update && apt-get -y install \
-        python3 \
-        libboost-dev \
-        libboost-thread-dev \
-        libclang-dev \
-        libgmp-dev \
-        libntl-dev \
-        libsodium-dev \
-        libssl-dev \
-        libtool 
+  libboost-dev \
+  libboost-thread-dev \
+  libboost-filesystem-dev \
+  libboost-iostreams-dev \
+  libclang-dev \
+  libgmp-dev \
+  libntl-dev \
+  libsodium-dev \
+  libssl-dev \
+  libtool
 
-
-RUN apt-get -y install \
-    libboost-filesystem-dev \
-    libboost-iostreams-dev
+# Setup work environment
+ENV MP_SPDZ_HOME=/usr/src/MP-SPDZ
+ENV LD_LIBRARY_PATH=$MP_SPDZ_HOME
+WORKDIR $MP_SPDZ_HOME
 
 # Create directories for MP-SPDZ files
-RUN mkdir -p /mp-spdz/Programs/Schedules /mp-spdz/Programs/Bytecode
+RUN mkdir -p Programs/Schedules Programs/Bytecode Player-Data PythonClient
 
 # Copy the compiled mascot-party.x binary
-COPY mascot-party.x /mp-spdz/
-COPY libSPDZ.so /mp-spdz/
-
-# Copy the required schedule and bytecode files
-COPY Programs/Schedules/*.sch /mp-spdz/Programs/Schedules/
-COPY Programs/Bytecode/*-0.bc /mp-spdz/Programs/Bytecode/
-
-RUN mkdir PythonClient Player-Data
-
-COPY PythonClient/client.py /mp-spdz/PythonClient/
-
-# Set the working directory
-WORKDIR /mp-spdz
+COPY mascot-party.x .
+COPY libSPDZ.so .
 
 # Make mascot-party.x executable and the spdz library readable
-RUN chmod +x /mp-spdz/mascot-party.x
-RUN chmod +rwx /mp-spdz/libSPDZ.so
+RUN chmod +x mascot-party.x
+RUN chmod +rwx libSPDZ.so
 
-ENV LD_LIBRARY_PATH=/mp-spdz
+# Copy the required schedule and bytecode files
+COPY Programs/Schedules/*.sch ./Programs/Schedules/
+COPY Programs/Bytecode/*.bc ./Programs/Bytecode/
 
+# Copy Python client
+COPY PythonClient/client.py ./PythonClient/
+RUN chmod +x ./PythonClient/client.py
 
 # Default entrypoint
-ENTRYPOINT ["/mp-spdz/PythonClient/client.py"]
+ENTRYPOINT ["python3", "./PythonClient/client.py"]
 
 
 # docker build -t yelnekave/mental-mafia-spdz .
