@@ -1,0 +1,11 @@
+{
+  // represents different phases of game
+  // e.g. role assignment, mafia/angel choose who to kill/save (this is one phase), detective, daytime voting (vote to kick a player)
+  "phase": "detective",
+  // some way of representing inputs (depends on which phase)
+  // if its the role assignment phase, everyone just sends their player id
+  // if its the mafia/angel phase, mafia sends kill choice, angel sends save choice
+  // if its detective, detective chooses who to investigate (player id), everyone else inputs their role
+  // if its daytime vote, everyone inputs player id of who they want to kick
+  "inputs": {}
+}
