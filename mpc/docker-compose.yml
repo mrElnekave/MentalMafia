@@ -6,7 +6,7 @@ services:
       - ./Player-Data/:/usr/src/MP-SPDZ/Player-Data/
 
 # To pass arguments (similar to docker run) use
-# docker compose run client 3
+# docker compose run client 2 add
 
 # To use docker compose directly use
 # docker compose up
