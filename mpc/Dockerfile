@@ -1,4 +1,4 @@
-FROM python:3.10.3-bullseye
+FROM --platform=linux/amd64 python:3.10.3-bullseye
 
 # Install dependencies
 RUN apt-get update && apt-get -y install \
