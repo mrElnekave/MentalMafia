@@ -12,6 +12,8 @@ RUN for file in Programs/Source/*.mpc; do ./compile.py $file; done
 
 COPY mascot-party.x libSPDZ.so client.py security.py ./
 
+RUN pip install eciespy typeguard
+
 ENTRYPOINT ["python3", "client.py"]
 
 # docker build -t mental-mafia .
