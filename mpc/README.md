@@ -1,30 +1,12 @@
+# README
 
-
-## Recompile the mental mafia mpc
+## Build the docker container and run
 ```bash
 docker build -t yelnekave/mental-mafia-spdz .
+docker run --rm -it -v ./state.json:/usr/src/MP-SPDZ/state.json yelnekave/mental-mafia-spdz
+```
+
+Optionally publish the container to Docker Hub
+```bash
 docker push yelnekave/mental-mafia-spdz
-```
-
-## Pull the image from docker hub and run
-
-```bash
-docker pull yelnekave/mental-mafia-spdz
-docker run --rm -it yelnekave/mental-mafia-spdz 3
-```
-
-## Running docker compose
-
-Option 1: Modify the docker-compose file "command" to set the desired number of parties and protocol
-
-Then run
-
-```bash
-docker compose up
-```
-
-Option 2: Run dynamic arguments with docker compose run
-
-```bash
-docker compose run client [NPARTIES] [PROTOCOL]
 ```

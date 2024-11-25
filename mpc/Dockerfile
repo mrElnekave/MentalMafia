@@ -15,4 +15,4 @@ COPY mascot-party.x libSPDZ.so client.py ./
 ENTRYPOINT ["python3", "client.py"]
 
 # docker build -t mental-mafia .
-# docker run --rm -it -v ./Player-Data:/usr/src/MP-SPDZ/Player-Data mental-mafia 2 add
+# docker run --rm -it -v ./state.json:/usr/src/MP-SPDZ/state.json mental-mafia

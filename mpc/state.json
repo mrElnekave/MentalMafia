@@ -3,8 +3,8 @@
   "protocol": "add",
   "num_players": 3,
   "inputs": [
-    "25",
+    "30",
     "10"
   ],
-  "output": "Sum of inputs: 35\n"
+  "output": "Sum of inputs: 40\n"
 }
