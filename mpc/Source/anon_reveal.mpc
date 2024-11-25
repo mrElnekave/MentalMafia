@@ -24,7 +24,7 @@ for i in range(N):
 # Sum up the `is_detective` array and check if the sum equals 1
 num_detectives = sum(is_detective).reveal()
 if_then(num_detectives != 1)
-print_ln("There is moret than one detective.")
+print_ln("There is more than one detective.")
 end_if()
 crash(num_detectives != 1)
 
