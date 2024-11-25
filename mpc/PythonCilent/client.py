@@ -11,6 +11,7 @@ import subprocess
 import sys
 import os
 import security as sec
+import json
 
 
 from enum import Enum
@@ -33,7 +34,7 @@ class State(Enum):
     # REPEAT GAMEPLAY
 
 
-
+STATE_FILE_PATH = '../../state.json'
 MPC_DIRECTORY = '.'
 NUM_PLAYERS = int(sys.argv[1])  # Expect number of players as argument 
 
@@ -99,14 +100,55 @@ async def get_result_from_mpc_protocol(mpc_program):
 def populate_input_from_state():
     """
     Populate the input files for each player from the state file.
+    Returns the input mapping (secret_id : input_val)
     """
-    pass
+    try:
+        # Open and load the state file
+        with open(STATE_FILE_PATH, 'r') as f:
+            state = json.load(f)
+        # Set the return value to the input mapping
+        inputs_mapping = state.get('inputs', {})
+        # Error check
+        if not isinstance(inputs_mapping, dict):
+            print("Invalid format for inputs. Should be a map")
+        # Return the input map
+        return inputs_mapping
+    except Exception as e:
+        print(f"An error occured: {e}")
 
 def write_output_to_state(result):
     """
     Write the output to the state file.
+    Returns true if the write was successful, false if an error occured
     """
-    pass
+    try:
+        # Open and load the current state of the JSON
+        with open(STATE_FILE_PATH, 'r') as f:
+            state = json.load(f)
+        # Set the output entry to your result
+        state['output'] = result
+        # Update the state file
+        with open(STATE_FILE_PATH, 'w') as f:
+            json.dump(state, f, indent=2)
+        return True
+    # If an error occured, throw this message
+    except Exception as e:
+        print(f"An error occured with the state file: {e}" )
+        return False
+
+def change_global_enum(phase):
+    """
+    Updates the global enum in the state.json file
+    """
+    try: 
+        with open(STATE_FILE_PATH, 'r') as f:
+            state = json.load(f)
+        state['global_enum'] = phase
+        with open(STATE_FILE_PATH, 'w') as f:
+            json.dump(state, f, indent=2)
+        return True
+    except Exception as e:
+        print("Error occured changing the enum")
 
 
 def send_detective_public_key():
@@ -117,8 +159,6 @@ def send_detective_public_key():
     
     # put the public key in the input and perfor an AAB
     
-
-
 async def run_detective_protocol():
     populate_input_from_state()
     # Set up playerdata such that the
@@ -155,7 +195,6 @@ async def run_voting_protocol():
     # update living list if necessary    
 
     write_output_to_state()
-
 
 async def test_main():
     # ---------------------------------------------------------
