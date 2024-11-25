@@ -33,18 +33,6 @@ class State(Enum):
     GAME_OVER_ADMISSION_JS = 12
     # REPEAT GAMEPLAY
 
-class File:
-    # INDIVIDUAL STATE
-    private_id = ""
-    detective_private_key = ""
-    # GLOBAL STATE
-    public_id_to_status = {}
-    detective_public_key = ""
-    global_enum = 0;
-    inputs = {}
-    output = ""
-
-state_file = File()
 
 
 STATE_FILE_PATH = '../../state.json'
