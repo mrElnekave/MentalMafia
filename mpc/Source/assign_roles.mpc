@@ -1,4 +1,9 @@
+from Compiler.types import sint, Array
+from Compiler.library import print_ln
+
+# Number of clients
 N = 5
+
 # 0 = Townsperson, 1 = Mafia, 2 = Doctor, 3 = Detective
 roles = sint.Array(N)
 roles.assign([0,0,1,2,3])

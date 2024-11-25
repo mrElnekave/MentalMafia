@@ -3,7 +3,7 @@ from Compiler.types import sint, Array
 from Compiler.library import print_ln
 
 # Number of clients
-N = 3
+N = 5
 
 client_inputs_angel = Array(N, sint)
 client_inputs_mafia = Array(N, sint)

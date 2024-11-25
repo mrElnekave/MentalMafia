@@ -2,7 +2,7 @@ from Compiler.types import sint, Array
 from Compiler.library import print_ln
 
 # Number of clients
-N = 3
+N = 5
 
 # Inputs: Each client provides a message (integer) and an ID (integer)
 client_inputs_message = Array(N, sint)

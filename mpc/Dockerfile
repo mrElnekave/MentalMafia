@@ -10,7 +10,7 @@ COPY Source ./Programs/Source
 
 RUN for file in Programs/Source/*.mpc; do ./compile.py $file; done
 
-COPY mascot-party.x libSPDZ.so client.py ./
+COPY mascot-party.x libSPDZ.so client.py security.py ./
 
 ENTRYPOINT ["python3", "client.py"]
 
