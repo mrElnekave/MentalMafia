@@ -1,0 +1,4 @@
+Player-Data/*
+!Player-Data/Input*
+
+**/__pycache__/*
