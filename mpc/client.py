@@ -84,7 +84,7 @@ class State:
   output: str                           # output of the MPC phases
   # PERSONAL STATE (unique to each individual)
   private_id: ID                        # private id (maps to role)
-  detective_private_key: str            # detective's private key (only detective has this) (hex str)
+  detective_private_key: str  | None    # detective's private key (only detective has this) (hex str)
 
 def generate_detective_key_pair() -> Tuple[str, str]:
     """
@@ -92,9 +92,6 @@ def generate_detective_key_pair() -> Tuple[str, str]:
     """
     secp_k = generate_key()
     return secp_k.public_key.format(True).hex(), secp_k.to_hex()
-
-def load_keys_from_state(state: State) -> Tuple[PublicKey, PrivateKey]:
-    return PublicKey(bytes.fromhex(state.detective_public_key)), PrivateKey.from_hex(state.detective_private_key)
 
 def write_player_input(input_value, player_id: ID):
     """
@@ -143,13 +140,11 @@ async def populate_input_from_state() -> Tuple[MPC_PROTOCOL | None, int, State] 
           raise ValueError("Not in MPC phase")
         num_players = 5 # num_players = state['num_players']
 
-        # Populate input files from the state file
-        # TODO: may need to do something to ensure correct format
-        for private_id, input in state.inputs.items():
-          write_player_input(input, private_id)
-
+        # TODO: may need to do something to ensure correct format for each of the write_player_inputs below
         # Handle role assignment phase
         if state.global_enum == PHASE.ROLE_ACCEPT_PY:
+          for private_id, input in state.inputs.items():
+            write_player_input(input, private_id)
           return MPC_PROTOCOL.ASSIGN_ROLES, num_players, state
         # Generate detective key pair (if you are detective)
         elif state.global_enum == PHASE.GEN_DETECTIVE_KEYS_PY:
@@ -159,12 +154,23 @@ async def populate_input_from_state() -> Tuple[MPC_PROTOCOL | None, int, State] 
           return None, num_players, state
         # Everyone receives detective's public key
         elif state.global_enum == PHASE.EVERYONE_ACCEPT_DETECTIVE_PK_PY:
+          for private_id, input in state.inputs.items():
+            write_player_input(input, private_id)
           return MPC_PROTOCOL.BROADCAST, num_players, state
         # Detective chooses someone to reveal
+        # Detective has input "0\n{index_to_detect(player_id)}"
+        # And the rest of the players have "{Encrypt(secret_id)}\n{player_id}"
         elif state.global_enum == PHASE.DETECTIVE_MPC_PY:
+          for private_id, input in state.inputs.items():
+            if ROLES_FROM_SID[state.private_id] == ROLE.DETECTIVE:
+              write_player_input(input, private_id)
+            else:
+              write_player_input(encrypt(state.detective_public_key, input), private_id)
           return MPC_PROTOCOL.DETECTIVE, num_players, state
         # Angel and Mafia choose someone to kill
         elif state.global_enum == PHASE.ANGEL_MAFIA_MPC_PY:
+          for private_id, input in state.inputs.items():
+            write_player_input(input, private_id)
           return MPC_PROTOCOL.ANGEL_MAFIA, num_players, state
         # Everyone votes
         elif state.global_enum == PHASE.VOTE_MPC_PY:
@@ -178,14 +184,13 @@ async def write_output_to_state(state: State):
     with open(STATE_FILE, 'w') as f:
         json.dump(state, f, indent=2)
 
-# async def run_detective_protocol():
+async def run_detective_protocol():
     # Set up playerdata such that the
-    # detective has input "0\n{index_to_detect(player_id)}"
-    # And the rest of the players have "{Encrypt(secret_id)}\n{player_id}"
 
     # If I am the detective, write out to my state file
+    pass
 
-# async def run_angel_mafia_protocol():
+async def run_angel_mafia_protocol():
     # The first input is relevant to the angels save
     # Angel puts player_id to save all others 0
     # Second input (second line) is what mafia kills
@@ -194,12 +199,15 @@ async def write_output_to_state(state: State):
     # do logic to figure out who died or if no-one died, update state
     # update living list if necessary
 
+    pass
 
-# async def run_voting_protocol(state):
+
+async def run_voting_protocol(state):
     # Get everyones votes and put it in the right player_data
 
     # do logic to figure out who died or if no-one died, update state
     # update living list if necessary
+    pass
 
 def check_state_metadata() -> Tuple[str, float]:
     """
