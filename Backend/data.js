@@ -120,8 +120,8 @@ function is_player_alive(pid){
       return null;
     }
     const val = current_state.public_id_to_status[pid];
-    if (val === "alive") return true;
-    else if (val === "dead") return false;
+    if (val === "true") return true;
+    else if (val === "false") return false;
     else {
       console.log('Unknown value');
       return null;
@@ -143,7 +143,7 @@ function kill_player(pid){
       console.error("State not loaded");
       return false;
     }
-    state.public_id_to_status[pid] = "dead"
+    state.public_id_to_status[pid] = "false"
     fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(state, null, 2), ENCODING);
     console.log('Player is dead');
     return true;
