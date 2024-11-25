@@ -1,0 +1,48 @@
+from Compiler.types import sint, Array
+from Compiler.library import print_ln
+
+# Number of clients
+N = 3
+
+# Inputs: Each client provides a message (integer) and an ID (integer)
+client_inputs_message = Array(N, sint)
+client_inputs_id = Array(N, sint)
+
+# Step 1: Read inputs from each client
+# later will need to move this to actually getting from the network
+for i in range(N):
+    client_inputs_message[i] = sint.get_input_from(i)
+    client_inputs_id[i] = sint.get_input_from(i)
+
+# Step 1a: Find the index of the detective (client with all-zero message)
+# A client's message is considered all zeros if it equals 0
+is_detective = Array(N, sint)  # Boolean array to track detectives
+for i in range(N):
+    is_detective[i] = (client_inputs_message[i] == 0)
+
+# Step 1b: Ensure there is exactly one detective
+# Sum up the `is_detective` array and check if the sum equals 1
+num_detectives = sum(is_detective).reveal()
+if_then(num_detectives != 1)
+print_ln("There is moret than one detective.")
+end_if()
+crash(num_detectives != 1)
+
+# Step 2: Get the ID the detective wants to reveal
+# Mask out all IDs except the detective's using multiplication
+requested_id = sum([is_detective[i] * client_inputs_id[i] for i in range(N)])
+
+
+# Step 3: Find the message of the client whose ID matches the detective's target
+# 3a: get the index of the client with the requested ID
+index_target = sint(-1)
+for i in range(N):
+    index_target = index_target * (client_inputs_id[i] != requested_id) + i * (client_inputs_id[i] == requested_id)
+
+# 3b: Find the message of the client with the target ID
+target_message = sint(-1)
+for i in range(N):
+    target_message = target_message * (i != index_target) + client_inputs_message[i] * (i == index_target)
+
+# Step 4: Reveal the target's message
+print_ln("Message of the client with the detective's target ID is: %s", target_message.reveal())
