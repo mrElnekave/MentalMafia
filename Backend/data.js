@@ -108,38 +108,47 @@ function write_output_to_state(result){
   }
 }
 
-function read_pid_to_state_map(){
+function is_player_alive(pid){
   /* 
-  Reads the pid to state map from state.json
-  Returns the mapping
+  Checks if a player is alive given a pid:
+  Returns true if alive, false if dead, otherwise null to designate an error state 
   */
   try {
     const current_state = read_state();
     if (!current_state){
-      console.error('Error reading current state');
+      console.error("State not loaded");
+      return null;
     }
-    return current_state.public_id_to_status;
-  } catch (err){
-    console.error('An error occured while reading the pid mapping: ', err);
-    return {};
+    const val = current_state.public_id_to_status[pid];
+    if (val === "alive") return true;
+    else if (val === "dead") return false;
+    else {
+      console.log('Unknown value');
+      return null;
+    }
+  } catch(err) {
+    console.error('An error occured while reading state');
+    return null;
   }
 }
 
-function write_pid_to_state_map(map){
-  /* 
-  Updates the pid to state mapping from state.json
-  Returns true if successful, false otherwise
+function kill_player(pid){
+  /*
+  Write a dead state to the state.json
+  Returns true on a successful write, false otherwise
   */
   try {
     const state = read_state();
     if (!state){
-      console.error('Error reading current state');
+      console.error("State not loaded");
+      return false;
     }
-    state.public_id_to_status = map;
+    state.public_id_to_status[pid] = "dead"
     fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(state, null, 2), ENCODING);
+    console.log('Player is dead');
     return true;
-  } catch (err){
-    console.error('An error occurred while writing to pid map');
+  } catch(err) {
+    console.error('An error occured while reading state');
     return false;
   }
 }
@@ -152,6 +161,6 @@ module.exports = {
   write_state,
   populate_input_from_state,
   write_output_to_state,
-  read_pid_to_state_map,
-  write_pid_to_state_map
+  is_player_alive,
+  kill_player
 };
