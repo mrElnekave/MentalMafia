@@ -88,7 +88,7 @@ class State:
         state_dict['global_enum'] = self.global_enum.value
         return state_dict
 
-def generate_detective_key_pair() -> Tuple[str, str]:
+def generate_detective_key_pair(_: State) -> Tuple[str, str]:
     """
     Generate an secp256k1 key pair for the detective.
     """
@@ -191,7 +191,7 @@ async def run_voting_protocol(state: State, num_players: int = 5):
         state.output = f"Executed {output}"
 
 
-async def populate_input_from_state() -> Tuple[Callable[[State], None], int, State] :
+async def populate_input_from_state() -> Tuple[Callable[[State], None] | None, int, State] :
     """
     Populate the input files for each player from the state file.
     Returns the MPC protocol to run, the number of players, and the state object.
@@ -202,29 +202,30 @@ async def populate_input_from_state() -> Tuple[Callable[[State], None], int, Sta
         state = State(**object) # Raises exception if state is not in valid format
 
         # Check if we are in an MPC phase
-        python_phases = [PHASE.GEN_DETECTIVE_KEYS_PY, PHASE.DETECTIVE_MPC_PY, PHASE.ANGEL_MAFIA_MPC_PY, PHASE.VOTE_MPC_PY]
+        python_phases = [PHASE.GEN_DETECTIVE_KEYS_PY.value, PHASE.DETECTIVE_MPC_PY.value, PHASE.ANGEL_MAFIA_MPC_PY.value, PHASE.VOTE_MPC_PY.value]
         if state.global_enum not in python_phases:
+          print(state.global_enum)
           raise ValueError("Not in MPC phase")
         num_players = 5 # num_players = state['num_players']
 
         # Generate detective key pair (if you are detective)
-        if state.global_enum == PHASE.GEN_DETECTIVE_KEYS_PY:
+        if state.global_enum == PHASE.GEN_DETECTIVE_KEYS_PY.value:
             return generate_detective_key_pair, num_players, state
         # Detective chooses someone to reveal
         # Detective has input "0\n{index_to_detect(player_id)}"
         # And the rest of the players have "{Encrypt(secret_id)}\n{player_id}"
-        elif state.global_enum == PHASE.DETECTIVE_MPC_PY:
+        elif state.global_enum == PHASE.DETECTIVE_MPC_PY.value:
             populate_inputs_from_state(state)
             return run_detective_protocol, num_players, state
         # Angel and Mafia choose someone to kill
-        elif state.global_enum == PHASE.ANGEL_MAFIA_MPC_PY:
+        elif state.global_enum == PHASE.ANGEL_MAFIA_MPC_PY.value:
             populate_inputs_from_state(state)
             return run_angel_mafia_protocol, num_players, state
         # Everyone votes
-        elif state.global_enum == PHASE.VOTE_MPC_PY:
+        elif state.global_enum == PHASE.VOTE_MPC_PY.value:
             populate_inputs_from_state(state)
             return run_voting_protocol, num_players, state
-    return lambda _: None, 0, state
+    return None, 0, state
 
 
 def check_state_metadata() -> Tuple[str, float]:
@@ -238,12 +239,14 @@ def check_state_metadata() -> Tuple[str, float]:
 
 async def play_one_round():
     protocol, _, state = await populate_input_from_state()
-    print(f"Running protocol {state.global_enum}, protocol: {protocol.__name__}")
-
-    # Run the MPC protocol for N players concurrently# Run the MPC protocol for N players concurrently    
-    await protocol(state) # Run the protocol
     
-    write_output_to_state(state)
+    if protocol != None:
+        print(f"Running protocol {state.global_enum}, protocol: {protocol.__name__}")
+
+        # Run the MPC protocol for N players concurrently# Run the MPC protocol for N players concurrently    
+        await protocol(state) # Run the protocol
+        
+        write_output_to_state(state)
 
 async def main() -> None:
     """
