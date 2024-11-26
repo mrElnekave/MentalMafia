@@ -1,0 +1,36 @@
+from Compiler.types import sint, Array
+from Compiler.library import print_ln
+
+# Number of clients
+N = 5
+
+# 0 = Townsperson, 1 = Mafia, 2 = Doctor, 3 = Detective
+roles = sint.Array(N)
+roles.assign([0,0,1,2,3])
+roles.secure_shuffle()
+
+# Initialize inputs
+client_inputs = Array(N, sint)
+
+# Get input from each player
+@for_range(N)
+def _(client_id):
+    client_inputs[client_id] = sint.get_input_from(client_id)
+
+result = sint.Matrix(N, 2)
+@for_range(N)
+def _(i):
+    result[i][0] = client_inputs[i]
+    result[i][1] = roles[i]
+
+# Send output to each player
+@for_range(N)
+def _(i):
+    print_ln_to(i, "%s", result.reveal_nested())
+
+# ./compile.py role
+# ./mascot-party.x 0 -N 5 role
+# ./mascot-party.x 1 -N 5 role
+# ./mascot-party.x 2 -N 5 role
+# ./mascot-party.x 3 -N 5 role
+# ./mascot-party.x 4 -N 5 role

@@ -1,14 +1,12 @@
+# README
 
-
-## Recompile the mental mafia mpc
+## Build the docker container and run
 ```bash
 docker build -t yelnekave/mental-mafia-spdz .
-docker push yelnekave/mental-mafia-spdz
+docker run --rm -it -v ./state.json:/usr/src/MP-SPDZ/state.json yelnekave/mental-mafia-spdz
 ```
 
-## Pull the image from docker hub and run
-
+Optionally publish the container to Docker Hub
 ```bash
-docker pull yelnekave/mental-mafia-spdz
-docker run --rm -it yelnekave/mental-mafia-spdz 3
+docker push yelnekave/mental-mafia-spdz
 ```

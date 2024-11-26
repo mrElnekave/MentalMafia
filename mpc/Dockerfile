@@ -1,52 +1,20 @@
-# Use Ubuntu as the base image
-FROM ubuntu:latest
+FROM python:3.10.3-bullseye
 
-RUN apt-get update && apt-get -y install \
-        python3 \
-        libboost-dev \
-        libboost-thread-dev \
-        libclang-dev \
-        libgmp-dev \
-        libntl-dev \
-        libsodium-dev \
-        libssl-dev \
-        libtool 
+ENV MP_SPDZ_HOME=/usr/src/MP-SPDZ
+ENV LD_LIBRARY_PATH=$MP_SPDZ_HOME
+WORKDIR $MP_SPDZ_HOME
 
+RUN pip install eciespy typeguard
 
-RUN apt-get -y install \
-    libboost-filesystem-dev \
-    libboost-iostreams-dev
+COPY Compiler/ ./Compiler
+COPY compile.py .
+COPY Source ./Programs/Source
 
-# Create directories for MP-SPDZ files
-RUN mkdir -p /mp-spdz/Programs/Schedules /mp-spdz/Programs/Bytecode
+RUN for file in Programs/Source/*.mpc; do ./compile.py $file; done
 
-# Copy the compiled mascot-party.x binary
-COPY mascot-party.x /mp-spdz/
-COPY libSPDZ.so /mp-spdz/
+COPY mascot-party.x libSPDZ.so client.py ./
 
-# Copy the required schedule and bytecode files
-COPY Programs/Schedules/*.sch /mp-spdz/Programs/Schedules/
-COPY Programs/Bytecode/*.bc /mp-spdz/Programs/Bytecode/
+ENTRYPOINT ["python3", "client.py"]
 
-RUN mkdir PythonClient Player-Data
-
-COPY PythonClient/client.py /mp-spdz/PythonClient/
-
-# Set the working directory
-WORKDIR /mp-spdz
-
-# Make mascot-party.x executable and the spdz library readable
-RUN chmod +x /mp-spdz/mascot-party.x
-RUN chmod +rwx /mp-spdz/libSPDZ.so
-
-ENV LD_LIBRARY_PATH=/mp-spdz
-
-
-# Default entrypoint
-ENTRYPOINT ["/mp-spdz/PythonClient/client.py"]
-
-
-# docker build -t yelnekave/mental-mafia-spdz .
-# docker push yelnekave/mental-mafia-spdz
-# docker pull yelnekave/mental-mafia-spdz
-# docker run --rm -it yelnekave/mental-mafia-spdz 3
+# docker build -t mental-mafia .
+# docker run --rm -it -v ./state.json:/usr/src/MP-SPDZ/state.json mental-mafia

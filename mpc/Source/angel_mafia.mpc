@@ -1,0 +1,35 @@
+
+from Compiler.types import sint, Array
+from Compiler.library import print_ln
+
+# Number of clients
+N = 5
+
+client_inputs_angel = Array(N, sint)
+client_inputs_mafia = Array(N, sint)
+
+# Get input from each player
+for i in range(N):
+    client_inputs_angel[i] = sint.get_input_from(i)
+    client_inputs_mafia[i] = sint.get_input_from(i)
+
+# 1: Get angel's save
+angel_save = sum(client_inputs_angel)
+
+# 2: Get mafia's kill
+mafia_kill = sum(client_inputs_mafia)
+
+# Check if they are the same
+saved = angel_save == mafia_kill
+
+@if_e(saved.reveal() == 1)
+def _():
+    print_ln("Angel saved the victim")
+@else_
+def _():
+    print_ln("Mafia killed %s", mafia_kill.reveal())
+
+
+# ./mascot-party.x -N 3 -p 0 angel_mafia > party0.log &
+# ./mascot-party.x -N 3 -p 1 angel_mafia > party1.log &
+# ./mascot-party.x -N 3 -p 2 angel_mafia > party2.log &
