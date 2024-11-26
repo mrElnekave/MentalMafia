@@ -85,10 +85,10 @@ class State:
     
     def to_dict(self):
         state_dict = asdict(self)
-        state_dict['global_enum'] = self.global_enum.value
+        # state_dict['global_enum'] = self.global_enum
         return state_dict
 
-def generate_detective_key_pair(_: State) -> Tuple[str, str]:
+def generate_detective_key_pair() -> Tuple[str, str]:
     """
     Generate an secp256k1 key pair for the detective.
     """
@@ -133,6 +133,7 @@ async def get_result_from_mpc_protocol(mpc_program: MPC_PROTOCOL, num_players: i
     return results[0]
 
 async def detective_key_gen(state: State):
+   state.global_enum = PHASE.POPULATE_KEYS_JS.value
    if ROLES_FROM_SID[state.private_id] == ROLE.DETECTIVE:
       state.detective_public_key, state.detective_private_key = generate_detective_key_pair()
       await write_output_to_state(state)
@@ -145,14 +146,14 @@ async def write_output_to_state(state: State):
         json.dump(state.to_dict(), f, indent=2)
 
 
-def populate_inputs_from_state(state: State):
+async def populate_inputs_from_state(state: State):
    for player_id, input in state.inputs.items():
         write_player_input(input, player_id)
 
 
 async def run_detective_protocol(state: State, num_players: int = 5):
     
-    output = get_result_from_mpc_protocol(MPC_PROTOCOL.DETECTIVE, num_players)    
+    output = await get_result_from_mpc_protocol(MPC_PROTOCOL.DETECTIVE, num_players)    
     # need to do some output cleanup here
 
     # If I am the detective, write out to my state file
@@ -168,7 +169,7 @@ async def run_angel_mafia_protocol(state: State, num_players: int = 5):
     # Angel puts player_id to save all others 0
 
     # do logic to figure out who died or if no-one died, update state
-    output = get_result_from_mpc_protocol(MPC_PROTOCOL.ANGEL_MAFIA, num_players)
+    output = await get_result_from_mpc_protocol(MPC_PROTOCOL.ANGEL_MAFIA, num_players)
     # update living list if necessary
 
     if str(output) == "Saved":
@@ -181,7 +182,7 @@ async def run_angel_mafia_protocol(state: State, num_players: int = 5):
 
 async def run_voting_protocol(state: State, num_players: int = 5):
     # do logic to figure out who died or if no-one died, update state
-    output = get_result_from_mpc_protocol(MPC_PROTOCOL.DAYTIME_VOTE, num_players)
+    output = await get_result_from_mpc_protocol(MPC_PROTOCOL.DAYTIME_VOTE, num_players)
     # update living list if necessary
     if str(output) == "No Majority":
         state.output = "No Majority"
@@ -210,10 +211,18 @@ async def populate_input_from_state() -> Tuple[Callable[[State], None] | None, i
 
         # Generate detective key pair (if you are detective)
         if state.global_enum == PHASE.GEN_DETECTIVE_KEYS_PY.value:
-            return generate_detective_key_pair, num_players, state
+            return detective_key_gen, num_players, state
         # Detective chooses someone to reveal
         # Detective has input "0\n{index_to_detect(player_id)}"
         # And the rest of the players have "{Encrypt(secret_id)}\n{player_id}"
+        # sample input
+        # """
+        # "1": "0\n3",
+        # "2": "1\n2", <-- all of these should be encrypted SID values
+        # "3": "1\n3",
+        # "4": "1\n4",
+        # "5": "1\n5"
+        # """
         elif state.global_enum == PHASE.DETECTIVE_MPC_PY.value:
             populate_inputs_from_state(state)
             return run_detective_protocol, num_players, state
@@ -246,7 +255,7 @@ async def play_one_round():
         # Run the MPC protocol for N players concurrently# Run the MPC protocol for N players concurrently    
         await protocol(state) # Run the protocol
         
-        write_output_to_state(state)
+        await write_output_to_state(state)
 
 async def main() -> None:
     """
@@ -275,5 +284,5 @@ if __name__ == '__main__':
 
 def prime_state():
     with open(STATE_FILE, 'w') as f:
-        temp_state = State(global_enum=PHASE.ROLE_DISTRIBUTION_JS, inputs={}, public_id_to_status={}, detective_public_key="", output="", private_id=0, detective_private_key=None).to_dict()
+        temp_state = State(global_enum=PHASE.ROLE_DISTRIBUTION_JS.value, inputs={}, public_id_to_status={}, detective_public_key="", output="", private_id=0, detective_private_key=None).to_dict()
         json.dump(temp_state, f, indent=2)
