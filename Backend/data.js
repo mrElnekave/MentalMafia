@@ -1,6 +1,7 @@
 // data.js
 const fs = require('fs');
 const path = require('path');
+const { exec } = require('child_process'); //maybe to help start the docker???
 
 const users = {}; // Stores user info by userid
 const STATE_FILE_PATH = '../state.json';
@@ -109,9 +110,9 @@ function write_output_to_state(result){
 }
 
 function is_player_alive(pid){
-  /* 
+  /*
   Checks if a player is alive given a pid:
-  Returns true if alive, false if dead, otherwise null to designate an error state 
+  Returns true if alive, false if dead, otherwise null to designate an error state
   */
   try {
     const current_state = read_state();
@@ -152,6 +153,19 @@ function kill_player(pid){
     return false;
   }
 }
+
+function encrypt_data(){}
+
+/*
+ * Review Propogate Input
+ * Review how state is used.
+ */
+
+function role_distribition(){}
+
+function call_docker_image(){}
+
+
 
 module.exports = {
   users,
