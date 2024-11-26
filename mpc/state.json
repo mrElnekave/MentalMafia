@@ -1,10 +1,15 @@
 {
-  "counter": "0",
-  "protocol": "add",
-  "num_players": 3,
-  "inputs": [
-    "30",
-    "10"
-  ],
-  "output": "Sum of inputs: 40\n"
+  "global_enum": 3,
+  "inputs": {
+    "0": 1,
+    "1": 1,
+    "2": 1,
+    "3": 1,
+    "4": 1
+  },
+  "public_id_to_status": {},
+  "detective_public_key": "",
+  "output": "2",
+  "private_id": 4,
+  "detective_private_key": null
 }

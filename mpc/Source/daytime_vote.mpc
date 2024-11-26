@@ -24,15 +24,16 @@ def _(i):
 
 # Check if there is a majority
 majority = max_votes > sint(N // 2)
-print_ln("maj: %s", majority.reveal())
 
 if_then(majority.reveal() == 1)
-# def _():
-print_ln("max_votes: %s", max_votes.reveal())
+
 voted_index = sint(0)
 
 @for_range(N)
 def _(i):
     voted_index.iadd(i * (votes_for[i] == max_votes))
 print_ln("Voted index: %s", voted_index.reveal())
+end_if()
+if_then(majority.reveal() == 0)
+print_ln("No majority")
 end_if()
