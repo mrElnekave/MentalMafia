@@ -1,0 +1,14 @@
+from Compiler.types import sint
+from Compiler.library import *
+
+# Number of clients
+N = 5
+
+# Get secret input from each player
+inputs = [sint.get_input_from(i) for i in range(N)]
+
+# Sum all inputs
+total = sum(inputs)
+
+# Reveal the result
+print_ln("Sum of inputs: %s", total.reveal())

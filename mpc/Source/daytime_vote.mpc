@@ -1,0 +1,39 @@
+from Compiler.types import sint, Array
+from Compiler.library import print_ln
+
+# Number of clients
+N = 3
+
+client_inputs_vote = Array(N, sint)
+
+# Get input from each player
+for i in range(N):
+    client_inputs_vote[i] = sint.get_input_from(i)
+
+votes_for = Array(N, sint)
+for i in range(N):
+    votes_for[i] = sum([client_inputs_vote[j] == i for j in range(N)])
+
+
+max_votes = votes_for[0]
+# Loop through the array to find the maximum value
+@for_range(1, N)
+def _(i):
+    max_votes.iadd((votes_for[i] - max_votes) * (votes_for[i] > max_votes))
+
+
+# Check if there is a majority
+majority = max_votes > sint(N // 2)
+
+if_then(majority.reveal() == 1)
+
+voted_index = sint(0)
+
+@for_range(N)
+def _(i):
+    voted_index.iadd(i * (votes_for[i] == max_votes))
+print_ln("Voted index: %s", voted_index.reveal())
+end_if()
+if_then(majority.reveal() == 0)
+print_ln("No majority")
+end_if()
