@@ -2,6 +2,7 @@
 const fs = require('fs');
 const path = require('path');
 const { exec } = require('child_process'); //maybe to help start the docker???
+const { encrypt, decrypt } = require('eciesjs'); //
 
 const users = {}; // Stores user info by userid
 const STATE_FILE_PATH = '../state.json';
@@ -13,23 +14,24 @@ function generateId() {
 
 function initialize_state_file() {
   /*
-  Initializes the state.json with the correct fields
+  Initializes the state.json with the correct fields 
   */
   const initialState = {
-    // PERSONAL STATE
-    private_id: "",               // Private_id (generated PY side)
-    detective_private_key: "",    // Only detective has this; otherwise null
     // SHARED STATE
-    public_id_to_status: {},      // Map public_id (generated JS side) to status (a/d)
-    detective_public_key: "",     // Detective PK is shared everywhere
     global_enum: "0",             // Describes phase of game; passes ball between py/js
     inputs: {},                   // Map secret_id to input for each
-    output: ""                    // Result of MPC for MPC phases for JS to read
+    public_id_to_status: {},      // Map public_id (generated JS side) to status (a/d)
+    detective_public_key: "",     // Detective PK is shared everywhere
+    output: "",                   // Result of MPC for MPC phases for JS to read
+    // PERSONAL STATE
+    private_id: "",               // Private_id (generated PY side)
+    detective_private_key: ""     // Only detective has this; otherwise null
   };
   fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(initialState, null, 2), ENCODING);
   console.log('State file initialized.');
 }
 
+//THIS FUNCTION IS GOOD: USED EVERYWHERE
 function read_state(){
 /*
 Reads and dumps the whole state.json file
@@ -46,7 +48,8 @@ Returns the JSON.parse() of state.json
   }
 }
 
-function write_state(new_state){
+//THIS FUNCTION IS GOOD: MIRRORS WRITE_OUTPUT_TO_STATE()
+function write_output_to_state(new_state){
   /*
   Updates the state.json file with a new state
   Returns true on a successful write, false otherwise
@@ -68,6 +71,7 @@ function write_state(new_state){
   }
 }
 
+/* FIXME: REDO THIS FUNCTION TO MIRROR PY VERSION */
 function populate_input_from_state(){
   /*
   Populates the input from the state file
@@ -89,26 +93,7 @@ function populate_input_from_state(){
   }
 }
 
-function write_output_to_state(result){
-  /*
-  Writes to the output entry of the state.json file
-  Returns true on a successful write, false otherwise
-  */
-  try {
-    const state = read_state();
-    if (!state){
-      console.error("Error reading current state");
-      return false;
-    }
-    state.output = result;
-    fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(state, null, 2), ENCODING);
-    return true;
-  } catch (err) {
-    console.error('An error occured while writing output: ', err);
-    return false
-  }
-}
-
+//THIS FUNCTION IS GOOD FOR FRONTEND CHECK
 function is_player_alive(pid){
   /*
   Checks if a player is alive given a pid:
@@ -133,6 +118,7 @@ function is_player_alive(pid){
   }
 }
 
+//THIS FUNCTION IS GOOD FOR FRONTEND WRITE
 function kill_player(pid){
   /*
   Write a dead state to the state.json
@@ -154,25 +140,26 @@ function kill_player(pid){
   }
 }
 
-function encrypt_data(){}
+/* TODO: DESIGN THIS FUNCTION TO ENCRYPT DATA, WRITE TO JSON[OUTPUT] I ASSUME */
+function handle_detective_choice(){}
 
-/*
- * Review Propogate Input
- * Review how state is used.
- */
+/* TODO: DESIGN THIS FUNCTION TO HANDLE ANGEL/MAFIA CHOICE TO SEND IN OUTPUT */
+function handle_angel_mafia_choice(){}
 
-function role_distribition(){}
-
+/* TODO: DESIGN THIS FUNCTION TO CALL THE DOCKER IMAGE; LOW PRIORITY */
 function call_docker_image(){}
 
+/* TODO: DESIGN THIS FUNCTION TO DISTRIBUTE ROLES TO PLAYERS */
+function role_distribution(){}
 
+/* TODO: DESIGN THIS FUNCTION TO ASSIGN KEYS TO PLAYERS */
+function populate_keys(){}
 
 module.exports = {
   users,
   generateId,
   initialize_state_file,
   read_state,
-  write_state,
   populate_input_from_state,
   write_output_to_state,
   is_player_alive,
