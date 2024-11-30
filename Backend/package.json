@@ -2,16 +2,18 @@
   "name": "mentalmafia",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js", 
+  "main": "server.js",
   "scripts": {
-    "start": "node server.js", 
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "child_process": "^1.0.2",
     "cors": "^2.8.5",
+    "eciesjs": "^0.4.12",
     "express": "^4.21.1",
     "socket.io": "^4.8.0"
   }
