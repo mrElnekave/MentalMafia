@@ -159,13 +159,20 @@ router.get('/players', (req, res) => {
 
 // Check game status
 router.get('/status', (req, res) => {
-  const result = checkWinCondition();
-  if (result === 'players_win') {
+  const winCondition = checkWinCondition();
+  if (winCondition === 'players_win') {
     return res.json({ status: 'ended', result: 'Players win!' });
-  } else if (result === 'mafia_win') {
+  } else if (winCondition === 'mafia_win') {
     return res.json({ status: 'ended', result: 'Mafia wins!' });
+  } else {
+    const currentStage = getGameStage();
+    if (currentStage === 'mafia' || currentStage === 'angel' || currentStage === 'detective') {
+      return res.json({ status: `night: ${currentStage}'s turn` });
+    } else if (currentStage === 'voting') {
+      return res.json({ status: 'voting' });
+    }
+    return res.json({ status: 'in-progress' });
   }
-  return res.json({ status: 'in-progress' });
 });
 
 module.exports = router;

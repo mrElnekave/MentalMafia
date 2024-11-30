@@ -5,7 +5,7 @@ import '../App.css';
 
 function GamePage() {
   const [players, setPlayers] = useState([]);
-  const [gameStatus, setGameStatus] = useState('in-progress');
+  const [gameStatus, setGameStatus] = useState(`night: mafia's turn`);
   const [message, setMessage] = useState('');
   const [userRole, setUserRole] = useState('');
   const userId = localStorage.getItem('userId');
@@ -53,7 +53,7 @@ function GamePage() {
 
   return (
     <div className="game-container">
-      <h2>Game Status: {gameStatus}</h2>
+      <h2>Game Status:{gameStatus}</h2>
 
       <div className="player-list">
         <h3>Players: {userRole}  </h3>
