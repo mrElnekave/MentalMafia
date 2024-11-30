@@ -31,7 +31,7 @@ router.post('/game/join', (req, res) => {
     // Role assignment logic (run only once)
     if (!users[userId].role) {
       // Ensure roles are assigned only once per session
-      const roles = ['Mafia', 'angel', 'player', 'player', 'player'];
+      const roles = ['Mafia', 'angel', 'detective', 'player', 'player'];
       roles.sort(() => Math.random() - 0.5); // Shuffle roles randomly
   
       Object.values(users).forEach((user, index) => {

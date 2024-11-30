@@ -5,6 +5,7 @@ const {
   processVotes,
   mafiaSelectTarget,
   angelSave,
+  detectiveInvestigate,
   finalizeRound,
   checkWinCondition,
 } = require('../gameLogic');
@@ -107,6 +108,27 @@ router.post('/action/save', (req, res) => {
   res.json({ message: 'Angel has saved a player.' });
 });
 
+// Detective's investigate action
+router.post('/action/investigate', (req, res) => {
+  const { userId, targetId } = req.body;
+
+  // Validate Detective user
+  const { error, user } = validateUser(userId);
+  if (error || user.role !== 'detective') {
+    return res.status(400).json({ error: 'Only the Detective can perform this action.' });
+  }
+
+  // Validate target
+  const { error: targetError, user: target } = validateUser(targetId);
+  if (targetError || target.status !== 'alive') {
+    return res.status(400).json({ error: 'Invalid target for investigation.' });
+  }
+
+  // Return the role of the investigated player
+  user.voted = true;
+  res.json({ message: `The role of the target is ${users[targetId].role}.` });
+  detectiveInvestigate(targetID)
+});
 
 // Fetch all players
 router.get('/players', (req, res) => {

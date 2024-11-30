@@ -6,7 +6,8 @@ function assignRoles() {
 
   users[playerIds[0]].role = 'Mafia'; // Assign the first player as Mafia
   users[playerIds[1]].role = 'angel'; // Assign the second player as Angel
-  for (let i = 2; i < playerIds.length; i++) {
+  users[playerIds[2]].role = 'detective'; // Assign the third player as Detective
+  for (let i = 3; i < playerIds.length; i++) {
     users[playerIds[i]].role = 'player'; // Assign the rest as regular players
   }
   console.log("Roles assigned:", users);
@@ -61,6 +62,24 @@ function angelSave(targetId) {
   }
 }
 
+function detectiveInvestigate(targetId, detectiveId) {
+  const detective = users[detectiveId];
+  const target = users[targetId];
+
+  if (!detective || detective.role !== 'Detective') {
+    console.log("Invalid action: This user is not a Detective.");
+    return;
+  }
+
+  if (!target || target.status !== 'alive') {
+    console.log("Invalid target: User does not exist or is not alive.");
+    return;
+  }
+
+  console.log(`Detective investigated ${target.name}. Their role is ${target.role}.`);
+  return target.role;
+}
+
 function finalizeRound() {
   Object.values(users).forEach((user) => {
     if (user.targetedByMafia) {
@@ -110,4 +129,5 @@ module.exports = {
   finalizeRound,
   checkWinCondition,
   resetVotingStatus,
+  detectiveInvestigate,
 };

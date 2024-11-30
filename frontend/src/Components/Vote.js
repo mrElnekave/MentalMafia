@@ -25,6 +25,7 @@ function Vote({ userId, userRole, players, setMessage, onVoteComplete }) {
     let url = '';
     if (action === 'kill') url = 'http://localhost:3001/api/game/action/kill';
     if (action === 'save') url = 'http://localhost:3001/api/game/action/save';
+    if (action === 'investigate') url = 'http://localhost:3001/api/game/action/investigate';
 
     try {
       const response = await axios.post(url, {
@@ -79,6 +80,15 @@ function Vote({ userId, userRole, players, setMessage, onVoteComplete }) {
           disabled={!selectedPlayerId}
         >
           Angel Save
+        </button>
+      )}
+
+      {userRole === 'detective' && (
+        <button
+          onClick={() => handleSpecialAction('investigate')}
+          disabled={!selectedPlayerId}
+        >
+          Investigate
         </button>
       )}
     </div>
