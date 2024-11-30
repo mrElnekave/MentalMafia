@@ -98,7 +98,6 @@ router.post('/action/kill', validateStage('mafia'), (req, res) => {
     return res.status(400).json({ error: 'Invalid target for Mafia kill.' });
   }
 
-  user.voted = true; // Mafia has completed their vote
   mafiaSelectTarget(targetId);
   res.json({ message: 'Mafia has selected a target.' });
 });
@@ -119,7 +118,6 @@ router.post('/action/save', validateStage('angel'), (req, res) => {
     return res.status(400).json({ error: 'Invalid target for Angel save.' });
   }
 
-  user.voted = true; // Angel has completed their vote
   angelSave(targetId);
   res.json({ message: 'Angel has saved a player.' });
 });
@@ -141,7 +139,6 @@ router.post('/action/investigate', validateStage('detective'), (req, res) => {
   }
 
   // Return the role of the investigated player
-  user.voted = true;
   res.json({ message: `The role of the target is ${users[targetId].role}.` });
   detectiveInvestigate(targetId)
 });

@@ -59,7 +59,7 @@ function Vote({ userId, userRole, players, setMessage, onVoteComplete }) {
           ))}
       </select>
 
-      {userRole === 'player' && (
+      {(userRole === 'player' ||  userRole === 'Mafia' || userRole === 'angel' || userRole === 'detective') && (
         <button onClick={handleVote} disabled={!selectedPlayerId}>
           Vote
         </button>
