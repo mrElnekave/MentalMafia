@@ -1,5 +1,28 @@
 const { users } = require('./data');
 
+let gameState = {
+  stage: 'mafia', // Initial stage: mafia, angel, detective, voting
+  targetedPlayer: null,
+  savedPlayer: null,
+  investigatedPlayer: null,
+};
+
+function getGameStage() {
+  return gameState.stage;
+}
+
+function nextStage() {
+  if (gameState.stage === 'mafia') {
+    gameState.stage = 'angel';
+  } else if (gameState.stage === 'angel') {
+    gameState.stage = 'detective';
+  } else if (gameState.stage === 'detective') {
+    gameState.stage = 'voting';
+  } else if (gameState.stage === 'voting') {
+    gameState.stage = 'mafia'; // Reset to Mafia stage for the next round
+  }
+}
+
 function assignRoles() {
   const playerIds = Object.keys(users);
   playerIds.sort(() => Math.random() - 0.5); // Shuffle player IDs randomly
@@ -14,6 +37,11 @@ function assignRoles() {
 }
 
 function processVotes() {
+  if (gameState.stage !== 'voting') {
+    console.log("It's not the Voting stage.");
+    return;
+  }
+  nextStage();
   const voteCounts = {};
   Object.values(users).forEach((user) => {
     if (user.votes) {
@@ -43,6 +71,11 @@ function processVotes() {
 }
 
 function mafiaSelectTarget(targetId) {
+  if (gameState.stage !== 'mafia') {
+    console.log("It's not the Mafia's turn.");
+    return;
+  }
+  nextStage()
   const target = users[targetId];
   if (target && target.status === 'alive') {
     target.targetedByMafia = true;
@@ -53,6 +86,11 @@ function mafiaSelectTarget(targetId) {
 }
 
 function angelSave(targetId) {
+  if (gameState.stage !== 'angel') {
+    console.log("It's not the Angel's turn.");
+    return;
+  }
+  nextStage();
   const target = users[targetId];
   if (target && target.status === 'alive') {
     target.savedByAngel = true;
@@ -62,14 +100,13 @@ function angelSave(targetId) {
   }
 }
 
-function detectiveInvestigate(targetId, detectiveId) {
-  const detective = users[detectiveId];
-  const target = users[targetId];
-
-  if (!detective || detective.role !== 'Detective') {
-    console.log("Invalid action: This user is not a Detective.");
+function detectiveInvestigate(targetId) {
+  if (gameState.stage !== 'detective') {
+    console.log("It's not the Detective's turn.");
     return;
   }
+  nextStage();
+  const target = users[targetId];
 
   if (!target || target.status !== 'alive') {
     console.log("Invalid target: User does not exist or is not alive.");
@@ -94,6 +131,11 @@ function finalizeRound() {
       user.savedByAngel = false;
     }
   });
+
+  // Reset game state for the next round
+  gameState.targetedPlayer = null;
+  gameState.savedPlayer = null;
+  gameState.investigatedPlayer = null;
 
   return checkWinCondition();
 }
@@ -130,4 +172,5 @@ module.exports = {
   checkWinCondition,
   resetVotingStatus,
   detectiveInvestigate,
+  getGameStage,
 };

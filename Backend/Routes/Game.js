@@ -8,6 +8,7 @@ const {
   detectiveInvestigate,
   finalizeRound,
   checkWinCondition,
+  getGameStage
 } = require('../gameLogic');
 const { users } = require('../data');
 
@@ -20,14 +21,29 @@ function validateUser(userId) {
   return { user };
 }
 
+function validateStage(expectedStage) {
+  return (req, res, next) => {
+    const currentStage = getGameStage(); // Dynamically get the current stage
+    if (currentStage !== expectedStage) {
+      return res.status(400).json({ error: `Invalid stage. Current stage is ${currentStage}.` });
+    }
+    next();
+  };
+}
+
 // Start the game
 router.post('/start', (req, res) => {
   assignRoles();
   res.json({ message: 'Game started, roles assigned!' });
 });
 
+router.get('/stage', (req, res) => {
+  const currentStage = getGameStage();
+  res.json({ stage: currentStage });
+});
+
 // Voting endpoint
-router.post('/vote', (req, res) => {
+router.post('/vote', validateStage('voting'), (req, res) => {
   const { userId, voteeId } = req.body;
 
   // Validate user
@@ -67,7 +83,7 @@ router.post('/vote', (req, res) => {
 });
 
 // Mafia's kill action
-router.post('/action/kill', (req, res) => {
+router.post('/action/kill', validateStage('mafia'), (req, res) => {
   const { userId, targetId } = req.body;
 
   // Validate Mafia user
@@ -88,7 +104,7 @@ router.post('/action/kill', (req, res) => {
 });
 
 // Angel's save action
-router.post('/action/save', (req, res) => {
+router.post('/action/save', validateStage('angel'), (req, res) => {
   const { userId, targetId } = req.body;
 
   // Validate Angel user
@@ -109,7 +125,7 @@ router.post('/action/save', (req, res) => {
 });
 
 // Detective's investigate action
-router.post('/action/investigate', (req, res) => {
+router.post('/action/investigate', validateStage('detective'), (req, res) => {
   const { userId, targetId } = req.body;
 
   // Validate Detective user
@@ -127,7 +143,7 @@ router.post('/action/investigate', (req, res) => {
   // Return the role of the investigated player
   user.voted = true;
   res.json({ message: `The role of the target is ${users[targetId].role}.` });
-  detectiveInvestigate(targetID)
+  detectiveInvestigate(targetId)
 });
 
 // Fetch all players
