@@ -6,6 +6,7 @@ import '../App.css';
 function GamePage() {
   const [players, setPlayers] = useState([]);
   const [gameStatus, setGameStatus] = useState(`night: mafia's turn`);
+  const [gameStage, setGameStage] = useState(''); 
   const [message, setMessage] = useState('');
   const [userRole, setUserRole] = useState('');
   const userId = localStorage.getItem('userId');
@@ -28,6 +29,15 @@ function GamePage() {
     }
   };
 
+  const fetchGameStage = async () => { // Add a function to fetch the game stage
+    try {
+      const response = await axios.get('http://localhost:3001/api/game/stage');
+      setGameStage(response.data.stage);
+    } catch (error) {
+      console.error('Error fetching game stage:', error.message);
+    }
+  };
+
   const joinGame = async () => {
     try {
       const response = await axios.post('http://localhost:3001/api/user/game/join', { userId });
@@ -43,17 +53,20 @@ function GamePage() {
   const handleVoteComplete = async () => {
     await fetchPlayers();
     await fetchGameStatus();
+    await fetchGameStage();
   };
 
   useEffect(() => {
     if (userId) {
       joinGame(); // Automatically join the game if userId is available
     }
+    fetchGameStage();
   }, [userId]);
 
   return (
     <div className="game-container">
       <h2>Game Status:{gameStatus}</h2>
+      <h3>Current Stage: {gameStage}</h3>
 
       <div className="player-list">
         <h3>Players: {userRole}  </h3>
