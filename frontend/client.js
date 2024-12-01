@@ -1,7 +1,7 @@
 //client.js
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process'); //maybe to help start the docker???
+//const { exec } = require('child_process'); //maybe to help start the docker???
 const { encrypt, decrypt } = require('eciesjs'); // for encryption/decrpytion
 
 const STATE_FILE_PATH = '../mpc/state.json';
@@ -177,12 +177,21 @@ function kill_player(pid) {
 }
 
 /* TODO: DESIGN THIS FUNCTION TO DISTRIBUTE ROLES TO PLAYERS */
-function role_distribution() { }
+function role_distribution(state){
+    /* 
+    This function should distribute roles to players
+    */
+}
 
 /* TODO: DESIGN THIS FUNCTION TO ASSIGN KEYS TO PLAYERS */
-function populate_keys() {}
+/* Question: How is the output formatted when returning the keys? */
+function populate_keys(state) {
+    /*
+    This function should assign keys to players
+    */
+}
 
-/* FIXME: Adjust this function */
+/* Handles the detective choice phase */
 function handle_detective_choice(state, detective_choice) {
     /*
       This function should handle the detective choice phase...
@@ -191,26 +200,43 @@ function handle_detective_choice(state, detective_choice) {
       Returns true on a successful write, false otherwise
     */
     try {
+        // General Case for Non-Detective Players
         if (state.private_id != 4 || state.detective_private_key === "") {
-            console.error("Player is not the detective!");
-            return false;
+            state.inputs[state.private_id] = "0\n0";
         }
-        const choice = "0\n" + detective_choice;
-        const encrypted = encrypt(state.detective_private_key, choice);
-        state.inputs[state.private_id] = encrypted;
+        // Detective Case
+        else {
+            const choice = "0\n" + detective_choice;
+            const encrypted = encrypt(state.detective_private_key, choice);
+            state.inputs[state.private_id] = encrypted;
+        }
+        //Write to state.json
         const retval = write_state(state);
         if (!retval) {
             console.error("Error writing to state");
             return false;
         }
     }
+    // Catch any errors
     catch (err) {
         console.error("Error handling detective choice");
         return false;
     }
 }
+/* Handles revealing the player the detective requested */
+/* FIXME: Add logic to display this on the frontend */
+function reveal_player(state){
+    /*
+    This function should reveal the player to the detective
+    The result from the mpc is stored in state[output], update this in the frontend
+    */
+    if (state.private_id === 4){
+        // TODO: Add logic to display this on the frontend
+        console.log("Player is: " + ROLES_FROM_SID[state.output]);
+    }
+}
 
-/* FIXME: Adjust this function */
+/* Handles the angel/mafia choice phase */
 function handle_angel_mafia_choice(state, choice) {
     /*
       This function should handle the angel/mafia choice
@@ -218,12 +244,20 @@ function handle_angel_mafia_choice(state, choice) {
       Returns true on a successful write, false otherwise
     */
     try {
-        if (state.private_id !== 2 || state.private_id !== 3) {
-            console.error("Player is not mafia or angel!");
-            return false;
+        // Handles Mafia Choice
+        if (state.private_id === 2){
+            state.inputs[state.private_id] = "0\n" + choice;
         }
-        state.inputs[state.private_id] = choice;
-        const retval = write_output_to_state(state);
+        // Handles Angel Choice
+        else if (state.private_id === 3){
+            state.inputs[state.private_id] = choice + "\n0";
+        }
+        // Handles Non-Angel/Mafia Players
+        else {
+            state.inputs[state.private_id] = "0\n0";
+        }
+        // Write to state.json
+        const retval = write_state(state);
         if (!retval) {
             console.error("Error writing to state");
             return false;
@@ -234,14 +268,16 @@ function handle_angel_mafia_choice(state, choice) {
     }
 }
 
-/*FIXME: Adjust this function */
+/* Handles the voting phase */
 function handle_voting(state, vote) {
     /*
     This function should handle the voting phase for every player.
     Just write the choice made to the state.json file
     */
     try {
+        // Mark the state with each players vote; same for all players
         state.inputs[state.private_id] = vote;
+        // Write to state.json
         const retval = write_output_to_state(state);
         if (!retval) {
             console.error("Error writing to state");
@@ -253,8 +289,40 @@ function handle_voting(state, vote) {
     }
 }
 
-/*TODO:  */
-function handle_game_over() {}
+/* Handle the game over phase */
+/* FIXME: Add the toggling to winning/losing screen */
+function is_game_over(state){
+    /*
+    This function should handle the game over phase
+    */
+    // If the mafia is dead, town wins
+    if(state.public_id_to_status[2] === false){
+        console.log("Town wins!");
+        // Toggle Winning Screen
+    }
+    // If everyone else is dead, mafia wins
+    else if (state.public_id_to_status[0] === false && 
+            state.public_id_to_status[1] === false &&
+            state.public_id_to_status[4] === false && 
+            state.public_id_to_status[3] === false){
+        console.log("Mafia wins!");
+        // Toggle Losing Screen
+    }
+    // If neither is true, the game is still going
+    else {   
+        console.log("Continue playing");
+        // Continue to next phase
+    }   
+}
+
+/* Updates the player status after a kill */
+/* FIXME: Add logic to display this on the frontend */
+/* Question: Does the MPC output the public or private ID? */
+function update_player_status(state){
+    /*
+    This function should update the player status
+    */
+}
 
 /* Updates the enum based on the input phase */
 function update_enum(phase) {
@@ -280,31 +348,9 @@ function update_enum(phase) {
     }
 }
 
-/* Starts the docker image to run the MPC */
-function call_docker_image() {
-    /* 
-    Calls the docker image to run the MPC
-    */
-    // docker build -t mental-mafia .
-    exec('docker build -t mental-mafia .', (err, stdout, stderr) => {
-        if (err) {
-            console.error(err);
-            return;
-        }
-        console.log(stdout);
-    });
-    // docker run --rm -it -v ./state.json:/usr/src/MP-SPDZ/state.json mental-mafia
-    exec('docker run --rm -it -v ./state.json:/usr/src/MP-SPDZ/state.json mental-mafia', (err, stdout, stderr) => {
-        if (err) {
-            console.error(err);
-            return;
-        }
-        console.log(stdout);
-    });
-}
-
 /* All emcompassing function to handle the game loop */
-function game_loop(choice = 0) {
+/* FIXME: Add info populating functions */
+function game_loop(choice = null) {
     /*
     This function should handle the game loop
     */
@@ -315,33 +361,42 @@ function game_loop(choice = 0) {
             return;
         }
         const game = new State(state);
-        const phase = game.global_enum;
+        const phase = parseInt(game.global_enum);
         if (!(phase in GamePhase)) {
             console.error("Unknown phase");
             return;
         }
         if (phase === GamePhase.ROLE_DISTRIBUTION_JS) {
             role_distribution(game);
+            //TODO: Populate Information
             update_enum(GamePhase.GEN_DETECTIVE_KEYS_PY);
         }
         else if (phase === GamePhase.POPULATE_KEYS_JS) {
             populate_keys(game);
+            //TODO: Populate Information
             update_enum(GamePhase.DETECTIVE_CHOICE_JS);
         }
         else if (phase === GamePhase.DETECTIVE_CHOICE_JS) {
-            handle_detective_choice(choice, game);
-            update_enum(GamePhase.DETECTIVE_MPC_PY);
+            update_player_status(game);             // Vote out the player who was chosen
+            is_game_over(game);                     // Check if the game is over
+            handle_detective_choice(choice, game);  // Handle the detective choice
+            //TODO: Populate Information
+            update_enum(GamePhase.DETECTIVE_MPC_PY);// Move to the next phase
         }
         else if (phase === GamePhase.ANGEL_MAFIA_CHOICE_JS) {
-            handle_angel_mafia_choice(choice, game);
-            update_enum(GamePhase.ANGEL_MAFIA_MPC_PY);
+            reveal_player(game);                    // Reveal the player to the detective
+            handle_angel_mafia_choice(choice, game);// Handle the angel/mafia choice
+            //TODO: Populate Information
+            update_enum(GamePhase.ANGEL_MAFIA_MPC_PY);// Move to the next phase
         }
         else if (phase === GamePhase.TALK_JS) {
-            handle_voting(choice, game);
-            update_enum(GamePhase.VOTE_MPC_PY);
+            update_player_status(game);             //Kill player the mafia chose
+            handle_voting(choice, game);            //Handle the voting phase
+            //TODO: Populate Information            
+            update_enum(GamePhase.VOTE_MPC_PY);     //Move to the next phase
         }
         else if (phase === GamePhase.GAME_OVER_ADMISSION_JS) {
-            handle_game_over();
+            //Toggle End Screen
         }
         else {
             console.error("Unknown phase");
@@ -364,7 +419,8 @@ module.exports = {
     handle_angel_mafia_choice,
     handle_voting,
     handle_game_over,
+    reveal_player,
+    update_player_status,
     update_enum,
-    call_docker_image,
     game_loop
 };
