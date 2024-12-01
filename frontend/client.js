@@ -1,8 +1,8 @@
 //client.js
 const fs = require('fs');
-const path = require('path');
+//const path = require('path');
 //const { exec } = require('child_process'); //maybe to help start the docker???
-const { encrypt, decrypt } = require('eciesjs'); // for encryption/decrpytion
+const { encrypt } = require('eciesjs'); // for encryption/decrpytion
 
 const STATE_FILE_PATH = '../mpc/state.json';
 const ENCODING = 'utf8';
@@ -216,6 +216,7 @@ function handle_detective_choice(state, detective_choice) {
             console.error("Error writing to state");
             return false;
         }
+        return true;
     }
     // Catch any errors
     catch (err) {
@@ -223,6 +224,7 @@ function handle_detective_choice(state, detective_choice) {
         return false;
     }
 }
+
 /* Handles revealing the player the detective requested */
 /* FIXME: Add logic to display this on the frontend */
 function reveal_player(state){
@@ -262,6 +264,7 @@ function handle_angel_mafia_choice(state, choice) {
             console.error("Error writing to state");
             return false;
         }
+        return true;
     } catch (err) {
         console.error("Error handling angel/mafia choice");
         return false;
@@ -278,7 +281,7 @@ function handle_voting(state, vote) {
         // Mark the state with each players vote; same for all players
         state.inputs[state.private_id] = vote;
         // Write to state.json
-        const retval = write_output_to_state(state);
+        const retval = write_state(state);
         if (!retval) {
             console.error("Error writing to state");
             return false;
@@ -296,15 +299,15 @@ function is_game_over(state){
     This function should handle the game over phase
     */
     // If the mafia is dead, town wins
-    if(state.public_id_to_status[2] === false){
+    if(state.public_id_to_status[2] === "false"){
         console.log("Town wins!");
         // Toggle Winning Screen
     }
     // If everyone else is dead, mafia wins
-    else if (state.public_id_to_status[0] === false && 
-            state.public_id_to_status[1] === false &&
-            state.public_id_to_status[4] === false && 
-            state.public_id_to_status[3] === false){
+    else if (state.public_id_to_status[0] === "false" && 
+            state.public_id_to_status[1] === "false" &&
+            state.public_id_to_status[4] === "false" && 
+            state.public_id_to_status[3] === "false"){
         console.log("Mafia wins!");
         // Toggle Losing Screen
     }
@@ -317,11 +320,13 @@ function is_game_over(state){
 
 /* Updates the player status after a kill */
 /* FIXME: Add logic to display this on the frontend */
-/* Question: Does the MPC output the public or private ID? */
 function update_player_status(state){
     /*
     This function should update the player status
     */
+    const pid = parseInt(state.output);
+    kill_player(pid);
+    /* TODO: Display this on the frontend */
 }
 
 /* Updates the enum based on the input phase */
