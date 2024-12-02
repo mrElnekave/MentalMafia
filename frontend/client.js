@@ -177,10 +177,14 @@ function kill_player(pid) {
 }
 
 /* TODO: DESIGN THIS FUNCTION TO DISTRIBUTE ROLES TO PLAYERS */
+/* Individual role */
 function role_distribution(state){
     /* 
     This function should distribute roles to players
     */
+   /* server should listen for changes on the json file
+   when all json files have changed
+   compile them together and propograte */
 }
 
 /* TODO: DESIGN THIS FUNCTION TO ASSIGN KEYS TO PLAYERS */
@@ -234,6 +238,7 @@ function reveal_player(state){
     */
     if (state.private_id === 4){
         // TODO: Add logic to display this on the frontend
+        //state.output = private_id
         console.log("Player is: " + ROLES_FROM_SID[state.output]);
     }
 }
@@ -324,8 +329,13 @@ function update_player_status(state){
     /*
     This function should update the player status
     */
+    if (isNaN(state.output)){
+        console.log("No one died");
+        return;
+    }
     const pid = parseInt(state.output);
     kill_player(pid);
+    return; 
     /* TODO: Display this on the frontend */
 }
 
@@ -423,7 +433,7 @@ module.exports = {
     handle_detective_choice,
     handle_angel_mafia_choice,
     handle_voting,
-    handle_game_over,
+    is_game_over,
     reveal_player,
     update_player_status,
     update_enum,
