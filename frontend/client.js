@@ -182,29 +182,38 @@ function role_distribution(state){
     /* 
     This function should distribute roles to players
     */
-   /* server should listen for changes on the json file
-   when all json files have changed
-   compile them together and propograte */  
-
 }
 
-/* TODO: DESIGN THIS FUNCTION TO ASSIGN KEYS TO PLAYERS */
-/* Question: How is the output formatted when returning the keys? */
+/* TODO: Implement server_populate_keys(detective_key) */
+/* Share the detective key with everyone */
 async function populate_keys(state) {
     /*
-    This function should assign keys to players
+    This function should assign keys to players.
+    Each player will send their key to the server, which will return the detective's key to everyone.
+    Then the detective key will be written to the state.json file.
+    Returns true on a successful write, false otherwise
     */
-    detective_public_key = "";
-    if (state.private_id === 4){
-        // Server_Populate Keys will return the detective's public key to everyone
-        state.detective_public_key = await server_populate_keys(state.detective_public_key);
+    try {
+        detective_public_key = "";
+        if (state.private_id === 4){
+            // Server_Populate Keys will return the detective's public key to everyone
+            state.detective_public_key = await server_populate_keys(state.detective_public_key);
+        }
+        else {
+            state.detective_public_key = await server_populate_keys("");
+        }
+        const write = write_state(state);
+        if (!write){
+            console.error("Error writing to state");
+            return false;
+        }
+    } 
+    catch (err) {
+        console.error("Error populating keys");
+        return false;
     }
-    else {
-        state.detective_public_key = await server_populate_keys("");
-    }
-    write_state(state);
 }
-
+/* TODO: Implement collect_and_populate(private_id, input) */
 /* Handles the detective choice phase */
 async function handle_detective_choice(state, detective_choice) {
     /*
