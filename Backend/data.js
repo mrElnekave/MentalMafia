@@ -1,6 +1,6 @@
-// data.js
+//data.js
 
-const users = {}; // Stores user info by userId
+const users = {}; // Stores user info by userid
 
 function generateId() {
   return Math.random().toString(36).substr(2, 9);
