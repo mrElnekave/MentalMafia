@@ -184,19 +184,29 @@ function role_distribution(state){
     */
    /* server should listen for changes on the json file
    when all json files have changed
-   compile them together and propograte */
+   compile them together and propograte */  
+
 }
 
 /* TODO: DESIGN THIS FUNCTION TO ASSIGN KEYS TO PLAYERS */
 /* Question: How is the output formatted when returning the keys? */
-function populate_keys(state) {
+async function populate_keys(state) {
     /*
     This function should assign keys to players
     */
+    detective_public_key = "";
+    if (state.private_id === 4){
+        // Server_Populate Keys will return the detective's public key to everyone
+        state.detective_public_key = await server_populate_keys(state.detective_public_key);
+    }
+    else {
+        state.detective_public_key = await server_populate_keys("");
+    }
+    write_state(state);
 }
 
 /* Handles the detective choice phase */
-function handle_detective_choice(state, detective_choice) {
+async function handle_detective_choice(state, detective_choice) {
     /*
       This function should handle the detective choice phase...
       Detective Choice: PID of the player to reveal; State is just the state.json file
@@ -216,7 +226,7 @@ function handle_detective_choice(state, detective_choice) {
             input = encrypted;
         }
         //Write to state.json
-        state.input = await collect_and_populate(state.private_id, input);
+        state.inputs = await collect_and_populate(state.private_id, input);
         const retval = write_state(state);
         if (!retval) {
             console.error("Error writing to state");
@@ -246,7 +256,7 @@ function reveal_player(state){
 }
 
 /* Handles the angel/mafia choice phase */
-function handle_angel_mafia_choice(state, choice) {
+async function handle_angel_mafia_choice(state, choice) {
     /*
       This function should handle the angel/mafia choice
       It should write these choices to JSON[INPUT] in the state.json file
@@ -267,7 +277,7 @@ function handle_angel_mafia_choice(state, choice) {
             input = "0\n0";
         }
         // Write to state.json
-        state.input = await collect_and_populate(state.private_id, input);
+        state.inputs = await collect_and_populate(state.private_id, input);
         const retval = write_state(state);
         if (!retval) {
             console.error("Error writing to state");
@@ -281,14 +291,14 @@ function handle_angel_mafia_choice(state, choice) {
 }
 
 /* Handles the voting phase */
-function handle_voting(state, vote) {
+async function handle_voting(state, vote) {
     /*
     This function should handle the voting phase for every player.
     Just write the choice made to the state.json file
     */
     try {
         // Mark the state with each players vote; same for all players
-        state.input_mapping = await collect_and_populate(state.private_id, vote);
+        state.inputs = await collect_and_populate(state.private_id, vote);
         // Write to state.json
         const retval = write_state(state);
         if (!retval) {
