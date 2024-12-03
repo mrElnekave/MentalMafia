@@ -204,17 +204,19 @@ function handle_detective_choice(state, detective_choice) {
       Returns true on a successful write, false otherwise
     */
     try {
+        let input = "";
         // General Case for Non-Detective Players
         if (state.private_id != 4 || state.detective_private_key === "") {
-            state.inputs[state.private_id] = "0\n0";
+            input = "0\n0";
         }
         // Detective Case
         else {
             const choice = "0\n" + detective_choice;
             const encrypted = encrypt(state.detective_private_key, choice);
-            state.inputs[state.private_id] = encrypted;
+            input = encrypted;
         }
         //Write to state.json
+        state.input = await collect_and_populate(state.private_id, input);
         const retval = write_state(state);
         if (!retval) {
             console.error("Error writing to state");
@@ -251,19 +253,21 @@ function handle_angel_mafia_choice(state, choice) {
       Returns true on a successful write, false otherwise
     */
     try {
+        let input = "";
         // Handles Mafia Choice
         if (state.private_id === 2){
-            state.inputs[state.private_id] = "0\n" + choice;
+            input = "0\n" + choice;
         }
         // Handles Angel Choice
         else if (state.private_id === 3){
-            state.inputs[state.private_id] = choice + "\n0";
+            input = choice + "\n0";
         }
         // Handles Non-Angel/Mafia Players
         else {
-            state.inputs[state.private_id] = "0\n0";
+            input = "0\n0";
         }
         // Write to state.json
+        state.input = await collect_and_populate(state.private_id, input);
         const retval = write_state(state);
         if (!retval) {
             console.error("Error writing to state");
@@ -284,7 +288,7 @@ function handle_voting(state, vote) {
     */
     try {
         // Mark the state with each players vote; same for all players
-        state.inputs[state.private_id] = vote;
+        state.input_mapping = await collect_and_populate(state.private_id, vote);
         // Write to state.json
         const retval = write_state(state);
         if (!retval) {
@@ -392,22 +396,19 @@ function game_loop(choice = null) {
             update_enum(GamePhase.DETECTIVE_CHOICE_JS);
         }
         else if (phase === GamePhase.DETECTIVE_CHOICE_JS) {
-            update_player_status(game);             // Vote out the player who was chosen
+            //update_player_status(game);             // Vote out the player who was chosen
             is_game_over(game);                     // Check if the game is over
             handle_detective_choice(choice, game);  // Handle the detective choice
-            //TODO: Populate Information
             update_enum(GamePhase.DETECTIVE_MPC_PY);// Move to the next phase
         }
         else if (phase === GamePhase.ANGEL_MAFIA_CHOICE_JS) {
             reveal_player(game);                    // Reveal the player to the detective
             handle_angel_mafia_choice(choice, game);// Handle the angel/mafia choice
-            //TODO: Populate Information
             update_enum(GamePhase.ANGEL_MAFIA_MPC_PY);// Move to the next phase
         }
         else if (phase === GamePhase.TALK_JS) {
-            update_player_status(game);             //Kill player the mafia chose
+            //update_player_status(game);             //Kill player the mafia chose
             handle_voting(choice, game);            //Handle the voting phase
-            //TODO: Populate Information            
             update_enum(GamePhase.VOTE_MPC_PY);     //Move to the next phase
         }
         else if (phase === GamePhase.GAME_OVER_ADMISSION_JS) {
