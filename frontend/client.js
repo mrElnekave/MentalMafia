@@ -196,7 +196,7 @@ function populate_keys(state) {
 }
 
 /* Handles the detective choice phase */
-function handle_detective_choice(state, detective_choice) {
+async function handle_detective_choice(state, detective_choice) {
     /*
       This function should handle the detective choice phase...
       Detective Choice: PID of the player to reveal; State is just the state.json file
@@ -246,7 +246,7 @@ function reveal_player(state){
 }
 
 /* Handles the angel/mafia choice phase */
-function handle_angel_mafia_choice(state, choice) {
+async function handle_angel_mafia_choice(state, choice) {
     /*
       This function should handle the angel/mafia choice
       It should write these choices to JSON[INPUT] in the state.json file
@@ -281,7 +281,7 @@ function handle_angel_mafia_choice(state, choice) {
 }
 
 /* Handles the voting phase */
-function handle_voting(state, vote) {
+async function handle_voting(state, vote) {
     /*
     This function should handle the voting phase for every player.
     Just write the choice made to the state.json file
