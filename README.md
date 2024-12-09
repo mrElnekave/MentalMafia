@@ -1,15 +1,4 @@
 # MentalMafia
 
-Backend works about 70% for game logic.
+Mental mafia is a distributed MPC implementation of the game mafia. For info on how to run the seperate segments look at the readmes in all the seperate folders.
 
-To test users I have a script on frontend called automation. It runs a simulation.
-
-Node automation.js --While in frontend folder
-
-Backend must be started. npm start in the backend folder.
-
-Frontend UI,just basic Logic page rn, 
-
-## MPC
-
-All mpc protocols implemented and runnable, still working on the interface with the JS client.
